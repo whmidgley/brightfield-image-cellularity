@@ -99,7 +99,7 @@ edata <- sqrt((hdata/2)^2 + (vdata*2)^2)
 
 # transform edge data to image
 imgE <- Image(edata)
-print(display(combine(img, imgH, imgV, imgE), method = "raster", all = T))
+#print(display(combine(img, imgH, imgV, imgE), method = "raster", all = T))
 
 display(imgE, method = "raster", all = T)
 
