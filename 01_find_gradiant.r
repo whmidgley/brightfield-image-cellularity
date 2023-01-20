@@ -8,7 +8,7 @@ setwd("C:/Users/william.midgley/Documents/Personal development/Amy's PhD/cell-an
 rm(list = ls())
 
 library(tidyverse)
-library(tiff)
+library(EBImage)
 library(grid)
 library(gridExtra)
 library(plot3D)
@@ -20,7 +20,7 @@ options(repr.plot.width = 15, repr.plot.height = 20)
 # Read images
 # ==========================================================================
 
-m_bf1 <- readTIFF("brightfield-images/bf1.tif")
+m_bf1 <- readImage("brightfield-images/bf1.tif")
 
 
 # ==========================================================================
@@ -59,7 +59,7 @@ m_bf1 <- readTIFF("brightfield-images/bf1.tif")
 
 m_bf1_gs <- m_bf1[,,1]
 #
-#persp3D(z = m_bf1_gs, theta = 120)
+persp3D(z = m_bf1_gs, theta = 120)
 
 
 d_bf1_gs <- data.frame(matrix(m_bf1_gs, ncol=1))
