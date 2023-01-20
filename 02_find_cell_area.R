@@ -22,9 +22,12 @@ options(repr.plot.width = 15, repr.plot.height = 20)
 # Read images
 # ==========================================================================
 
+load("r-objects/m_bf1_normal.RData")
+
 m_bf1 <- readImage("brightfield-images/bf1.tif")
 m_bf1 <- array(m_bf1, dim = dim(m_bf1))
 m_bf1_gs <- m_bf1[,,1]
+m_bf1_gs_normal <- m_bf1_normal[,,1]
 
 # ==========================================================================
 # Let's have a look
@@ -45,22 +48,13 @@ d_bf1 <- data.frame(
 
 #plot(d_bf1$red, d_bf1$green, pch = 16, col=rgb(d_bf1))
 
-
-# ==========================================================================
-# Normalise the image using the plane
-# ==========================================================================
-
-m_bf1_gs <- t(m_bf1[,,1])
-
-m_bf1_gs_normal <- matrix(m_bf1_gs, ncol=1) - matrix(m_plane, ncol=1) + 0.5
-
-
 # ==========================================================================
 # Have a look
 # ==========================================================================
 
 #persp3D(z = m_bf1_gs_normal, theta = 120)
 
+ m_bf1_gs_normal <- imgE
 
 d_bf1_gs_normal <- data.frame(matrix(m_bf1_gs_normal, ncol=1))
 
@@ -133,4 +127,6 @@ m_bf1_normal_segmented <- array(
 
 grid.raster(m_bf1_normal_segmented)
 
+# I appear to be transforming the image somewhere (I think it might be in normalisation)
+# I'm not going to worry about that too much for the time being
 

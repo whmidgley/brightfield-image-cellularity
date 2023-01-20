@@ -13,8 +13,9 @@ library(grid)
 library(gridExtra)
 library(e1071)
 library(EBImage)
-library(denoiseR)
-library(SpatialPack)
+#library(denoiseR)
+#library(SpatialPack)
+library(patchwork)
 options(digits=20)  # this allows R to use decimals up to 20 places
 options(repr.plot.width = 15, repr.plot.height = 20)
 
@@ -23,7 +24,7 @@ options(repr.plot.width = 15, repr.plot.height = 20)
 # Load image
 # ==========================================================================
 
-load("qsave/m_bf1_normal.RData")
+load("r-objects/m_bf1_normal.RData")
 m_bf1 <- readImage("brightfield-images/bf1.tif")
 
 img <- m_bf1_normal
@@ -88,23 +89,29 @@ hfilt <- matrix(c(1, 2, 1, 0, 0, 0, -1, -2, -1), nrow = 3) # sobel
 vfilt <- t(hfilt)
 
 # get horizontal and vertical edges
-imgH <- filter2(t(img[,,1]), hfilt, boundary="replicate")
-imgV <- filter2(t(img[,,1]), vfilt, boundary="replicate")
+imgH <- filter2(img[,,1], hfilt, boundary="replicate")
+imgV <- filter2(img[,,1], vfilt, boundary="replicate")
 
 # combine edge pixel data to get overall edge data
 hdata <- imageData(imgH)
 vdata <- imageData(imgV)
-edata <- sqrt(hdata^2 + vdata^2)
+edata <- sqrt((hdata/2)^2 + (vdata*2)^2)
 
 # transform edge data to image
 imgE <- Image(edata)
 print(display(combine(img, imgH, imgV, imgE), method = "raster", all = T))
 
+display(imgH, method = "raster", all = T)
 display(imgV, method = "raster", all = T)
+
 
 display(imgE, method = "raster", all = T)
 
+imgE_black <- imgE
 
+imgE_black <- round(imgE_black)
+
+plot(imgE_black)
 # 2. Enhance edges with low pass filter
 
 hfilt <- matrix(c(1, 1, 1, 1, 1, 1, 1, 1, 1), nrow = 3) # low pass
@@ -126,18 +133,40 @@ edata <- sqrt(hdata^2 + vdata^2)
 imgE <- Image(edata)
 plot(imgE)
 
+imgE_white <- round(imgE)
+#imgE_white <- abs(imgE_white-1)
+
+plot(imgE_white)
 
 # Low pass filter with gblur and make binary
-  xb <- gblur(img, 3)
-  xt <- thresh(xb, offset = 0.0001)
-  grid.raster(xt) # thresh.jpg
+#  xb <- gblur(xe, 1)
+#  xt <- thresh(xb, offset = 0.0001)
+#  grid.raster(xt) # thresh.jpg
 
 
-  xm <- bwlabel(xt[,,1])
-  FS <- computeFeatures.shape(xm)
-  sel <- which(FS[,"s.area"] > 20000)
-  xe <- rmObjects(xm, sel)
+ xm <- bwlabel(imgE_white)
+ FS <- computeFeatures.shape(xm)
+ sel <- which(FS[,"s.area"] > 1000000)
+ xe1 <- rmObjects(xm, sel)
+ xe1 <- thresh(xe1)
 
-# Make binary again and plot
-  xe <- thresh(xe)
-  grid.raster(xe) # trimmed.jpg
+
+ xm <- bwlabel(abs(xe1-1))
+ FS <- computeFeatures.shape(xm)
+ sel <- which(FS[,"s.area"] < 1000)
+ xe <- rmObjects(xm, sel)
+
+#xe <- fillHull(xe)
+#grid.raster(xe)
+
+xe[xe>1] <- 1
+
+cell_area <- xe
+
+grid.raster(cell_area)
+
+d_cell_area <- data.frame(matrix(cell_area, ncol = 1))
+
+cellularity <- sum(d_cell_area)*100/nrow(d_cell_area)
+
+cat("cellularity is", round(cellularity),"%\n")
