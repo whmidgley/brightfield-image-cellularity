@@ -26,7 +26,7 @@ options(repr.plot.width = 15, repr.plot.height = 20)
 
 m_bf1 <- readImage("brightfield-images/bf1.tif")
 
-m_bf1 <- array(m_bf1_gs, dim = dim(m_bf1))
+m_bf1 <- array(m_bf1, dim = dim(m_bf1))
 m_bf1_gs <- m_bf1[,,1]
 
 # ==========================================================================
