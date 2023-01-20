@@ -5,7 +5,7 @@ cat("Clear and load!\n")
 
 setwd("C:/Users/william.midgley/Documents/Personal development/Amy's PhD/cell-analysis")
 
-rm(list = ls())
+#rm(list = ls())
 
 library(tidyverse)
 library(tiff)
@@ -25,10 +25,10 @@ options(repr.plot.width = 15, repr.plot.height = 20)
 # ==========================================================================
 
 load("r-objects/m_bf1_normal.RData")
-m_bf1 <- readImage("brightfield-images/bf1.tif")
+#m_bf1 <- readImage("brightfield-images/bf1.tif")
 
 img <- m_bf1_normal
-grid.raster(img)
+
 # ==========================================================================
 # Edge detection
 # ==========================================================================
@@ -101,17 +101,14 @@ edata <- sqrt((hdata/2)^2 + (vdata*2)^2)
 imgE <- Image(edata)
 print(display(combine(img, imgH, imgV, imgE), method = "raster", all = T))
 
-display(imgH, method = "raster", all = T)
-display(imgV, method = "raster", all = T)
-
-
 display(imgE, method = "raster", all = T)
+
 
 imgE_black <- imgE
 
 imgE_black <- round(imgE_black)
 
-plot(imgE_black)
+#plot(imgE_black)
 # 2. Enhance edges with low pass filter
 
 hfilt <- matrix(c(1, 1, 1, 1, 1, 1, 1, 1, 1), nrow = 3) # low pass
@@ -131,12 +128,12 @@ edata <- sqrt(hdata^2 + vdata^2)
 
 # transform edge data to image
 imgE <- Image(edata)
-plot(imgE)
+#plot(imgE)
 
 imgE_white <- round(imgE)
 #imgE_white <- abs(imgE_white-1)
 
-plot(imgE_white)
+#plot(imgE_white)
 
 # Low pass filter with gblur and make binary
 #  xb <- gblur(xe, 1)
@@ -157,7 +154,7 @@ plot(imgE_white)
  xe <- rmObjects(xm, sel)
 
 #xe <- fillHull(xe)
-#grid.raster(xe)
+#grid.raster(xe1)
 
 xe[xe>1] <- 1
 

@@ -5,7 +5,7 @@ cat("Clear and load!\n")
 
 setwd("C:/Users/william.midgley/Documents/Personal development/Amy's PhD/cell-analysis")
 
-rm(list = ls())
+#rm(list = ls())
 
 library(tidyverse)
 library(EBImage)
@@ -24,9 +24,9 @@ options(repr.plot.width = 15, repr.plot.height = 20)
 
 load("r-objects/m_bf1_normal.RData")
 
-m_bf1 <- readImage("brightfield-images/bf1.tif")
-m_bf1 <- array(m_bf1, dim = dim(m_bf1))
-m_bf1_gs <- m_bf1[,,1]
+#m_bf1 <- readImage("brightfield-images/bf1.tif")
+#m_bf1 <- array(m_bf1, dim = dim(m_bf1))
+#m_bf1_gs <- m_bf1[,,1]
 m_bf1_gs_normal <- m_bf1_normal[,,1]
 
 # ==========================================================================
@@ -54,7 +54,6 @@ d_bf1 <- data.frame(
 
 #persp3D(z = m_bf1_gs_normal, theta = 120)
 
- m_bf1_gs_normal <- imgE
 
 d_bf1_gs_normal <- data.frame(matrix(m_bf1_gs_normal, ncol=1))
 

@@ -9,7 +9,7 @@ if (Sys.info()["user"] == "william.midgley") {
   cat("Please add wd\n") 
 }
 
-rm(list = ls())
+#rm(list = ls())
 
 library(tidyverse)
 library(EBImage)
@@ -24,10 +24,10 @@ options(repr.plot.width = 15, repr.plot.height = 20)
 # Read images
 # ==========================================================================
 
-m_bf1 <- readImage("brightfield-images/bf1.tif")
-
-m_bf1 <- array(m_bf1, dim = dim(m_bf1))
-m_bf1_gs <- m_bf1[,,1]
+#m_bf1 <- readImage("brightfield-images/bf1.tif")
+#
+#m_bf1 <- array(m_bf1, dim = dim(m_bf1))
+#m_bf1_gs <- m_bf1[,,1]
 
 # ==========================================================================
 # Let's have a look
@@ -63,31 +63,31 @@ grid.raster(m_bf1)
 # Plot 3D graph
 # ==========================================================================
 
-m_bf1_gs <- m_bf1[,,1]
+#m_bf1_gs <- m_bf1[,,1]
+##
+##persp3D(z = m_bf1_gs, theta = 120)
 #
-#persp3D(z = m_bf1_gs, theta = 120)
-
-
-d_bf1_gs <- data.frame(matrix(m_bf1_gs, ncol=1))
-
-d_bf1_gs <-
-expand.grid(1:nrow(m_bf1_gs), 1:ncol(m_bf1_gs)) %>%
-	data.frame() %>%
-	cbind(d_bf1_gs)
-
-colnames(d_bf1_gs) <- c("x", "y", "z")
-
-fit_bf1_gs <- lm(z ~ x + y, data = d_bf1_gs)
-
-
-fun <- function(i,j) {
-	fit_bf1_gs$coefficients[1] + fit_bf1_gs$coefficients[2]*i + fit_bf1_gs$coefficients[3]*j
-}
-
-rows <- 1:699
-cols <- 1:699
-
-m_plane <- outer(rows,cols,FUN=fun)
+#
+#d_bf1_gs <- data.frame(matrix(m_bf1_gs, ncol=1))
+#
+#d_bf1_gs <-
+#expand.grid(1:nrow(m_bf1_gs), 1:ncol(m_bf1_gs)) %>%
+#	data.frame() %>%
+#	cbind(d_bf1_gs)
+#
+#colnames(d_bf1_gs) <- c("x", "y", "z")
+#
+#fit_bf1_gs <- lm(z ~ x + y, data = d_bf1_gs)
+#
+#
+#fun <- function(i,j) {
+#	fit_bf1_gs$coefficients[1] + fit_bf1_gs$coefficients[2]*i + fit_bf1_gs$coefficients[3]*j
+#}
+#
+#rows <- 1:699
+#cols <- 1:699
+#
+#m_plane <- outer(rows,cols,FUN=fun)
 
 # ==========================================================================
 # Let's have a look at that plane
@@ -122,8 +122,8 @@ m_plane <- outer(rows,cols,FUN=fun)
 normal <- m_bf1_gs
 
 reps <- c(1:5)
-rows <- 1:699
-cols <- 1:699
+rows <- 1:nrow(m_bf1)
+cols <- 1:ncol(m_bf1)
 fun <- function(i,j,fit) {
 	fit$coefficients[1] + fit$coefficients[2]*i + fit$coefficients[3]*j
 }
