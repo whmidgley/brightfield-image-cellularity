@@ -23,8 +23,8 @@ options(repr.plot.width = 15, repr.plot.height = 20)
 # ==========================================================================
 
 m_bf1 <- readImage("brightfield-images/bf1.tif")
+m_bf1 <- array(m_bf1_gs, dim = dim(m_bf1))
 
-load("qsave/m_plane.RData")
 
 # ==========================================================================
 # Let's have a look
@@ -85,7 +85,6 @@ grid.raster(m_bf1_normal)
 # k-means clustering
 # ==========================================================================
 
-
 k_bf1_normal <- kmeans(d_bf1_normal, 5) # separate into 3 colours
 
 
@@ -135,62 +134,3 @@ m_bf1_normal_segmented <- array(
 grid.raster(m_bf1_normal_segmented)
 
 
-
-# ==========================================================================
-# k-nearest neibour clustering
-# ==========================================================================
-
-
-#k_bf1_normal <- knn(d_bf1_normal) # separate into 3 colours
-#
-#
-##error <- vector()   # define an empty object to store the error for each cluster
-##for (i in 1:15){
-##  error[i]<-kmeans(d_bf1_normal,i)$tot.withinss 
-##}
-#
-##plot(error)
-#
-#
-##head(k_bf1_normal)
-#d_bf1_normal_k <- d_bf1_normal
-## Attach cluster labels to our dataframe
-#d_bf1_normal_k$label <- k_bf1_normal$cluster
-#
-## Let's also assign the cluster labels to the cluster colours
-#colours1 <- data.frame(k_bf1_normal$centers, c(1:5))
-#colnames(colours1) <- c("red.c","green.c","blue.c","label")
-#colours1
-#
-#
-#d_bf1_normal_k <- inner_join(d_bf1_normal_k, colours1 ,by="label")
-#
-##head(d_bf1_normal)
-#
-#
-#d_bf1_normal_k %>%
-#select(red.c,green.c,blue.c) %>%
-#unlist() %>%
-#unname()
-#
-#
-#
-#m_bf1_normal_segmented <- array(
-#  d_bf1_normal_k %>%
-#    select(
-#      red.c,
-#      green.c,
-#      blue.c
-#    ) %>%
-#    unlist() %>%
-#    unname(),
-#  dim = dim(m_bf1)
-#)
-#
-#grid.raster(m_bf1_normal_segmented)
-
-# ==========================================================================
-# Save normalised image
-# ==========================================================================
-
-save(m_bf1_normal, file ="qsave/m_bf1_normal.RData")

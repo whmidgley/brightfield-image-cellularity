@@ -32,51 +32,52 @@ grid.raster(img)
 # Edge detection
 # ==========================================================================
 
-data(texmos2)
-
-grid.raster(texmos2)
-
-x <- imnoise(matrix(img), type = "saltnpepper", epsilon = 0.10)
-  plot(as.raster(x))
-
-
-
-
-shrink_main <- adashrink(img, method = c("GSURE","SURE"),
-gamma.seq = seq(1, 5, by = 0.1), nbsim = 500, method.optim = "BFGS",
-center = "TRUE")
-
-shrink1 <- shrink_main$low.rank$u
-
-#shrink1 <- matrix(shrink, ncol = 699) + 0.5
-#shrink1 <- m_bf1_normal[,,1] + matrix(shrink, ncol = 699)
-
-
-shrink3 <- data.frame(matrix(shrink1, ncol=3))
-
-colnames(shrink3) <- c("red", "green", "blue")
-
-shrink3$red <- shrink3$red + 0.5 #matrix(m_bf1_normal[,,1], ncol=1)
-shrink3$green <- shrink3$green + 0.5 #matrix(m_bf1_normal[,,1], ncol=1)
-shrink3$blue <- shrink3$blue + 0.5 #matrix(m_bf1_normal[,,1], ncol=1)
-
-
-shrink4 <- array(
-  shrink3 %>%
-    select(
-          red,
-          green,
-          blue
-        ) %>%
-        unlist() %>%
-        unname(),
-  dim = dim(m_bf1)
-)
-
-
-grid.raster(shrink4)
-
-grid.raster(m_bf1_normal)
+#data(texmos2)
+#
+#grid.raster(texmos2)
+#
+#x <- imnoise(matrix(img), type = "saltnpepper", epsilon = 0.10)
+#x <- matrix(x, ncol = 3)[,1] %>% matrix(ncol = 699)
+#grid.raster()
+#
+#
+#
+#
+#shrink_main <- adashrink(img, method = c("GSURE","SURE"),
+#gamma.seq = seq(1, 5, by = 0.1), nbsim = 500, method.optim = "BFGS",
+#center = "TRUE")
+#
+#shrink1 <- shrink_main$low.rank$u
+#
+##shrink1 <- matrix(shrink, ncol = 699) + 0.5
+##shrink1 <- m_bf1_normal[,,1] + matrix(shrink, ncol = 699)
+#
+#
+#shrink3 <- data.frame(matrix(shrink1, ncol=3))
+#
+#colnames(shrink3) <- c("red", "green", "blue")
+#
+#shrink3$red <- shrink3$red + 0.5 #matrix(m_bf1_normal[,,1], ncol=1)
+#shrink3$green <- shrink3$green + 0.5 #matrix(m_bf1_normal[,,1], ncol=1)
+#shrink3$blue <- shrink3$blue + 0.5 #matrix(m_bf1_normal[,,1], ncol=1)
+#
+#
+#shrink4 <- array(
+#  shrink3 %>%
+#    select(
+#          red,
+#          green,
+#          blue
+#        ) %>%
+#        unlist() %>%
+#        unname(),
+#  dim = dim(m_bf1)
+#)
+#
+#
+#grid.raster(shrink4)
+#
+#grid.raster(m_bf1_normal)
 
 
 

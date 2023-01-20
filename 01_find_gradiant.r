@@ -3,7 +3,11 @@
 # ==========================================================================
 cat("Clear and load!\n")
 
-setwd("C:/Users/william.midgley/Documents/Personal development/Amy's PhD/cell-analysis")
+if (Sys.info()["user"] == "william.midgley") {
+  setwd("C:/Users/william.midgley/Documents/Personal development/Amy's PhD/cell-analysis")
+} else {
+  cat("Please add wd\n") 
+}
 
 rm(list = ls())
 
@@ -22,6 +26,8 @@ options(repr.plot.width = 15, repr.plot.height = 20)
 
 m_bf1 <- readImage("brightfield-images/bf1.tif")
 
+m_bf1 <- array(m_bf1_gs, dim = dim(m_bf1))
+m_bf1_gs <- m_bf1[,,1]
 
 # ==========================================================================
 # Let's have a look
@@ -29,7 +35,7 @@ m_bf1 <- readImage("brightfield-images/bf1.tif")
 
 #dim(m_bf1)
 #
-#grid.raster(m_bf1)
+grid.raster(m_bf1)
 #
 #d_bf1 <- data.frame(
 #  red   = matrix(m_bf1[,,1], ncol=1),
@@ -59,7 +65,7 @@ m_bf1 <- readImage("brightfield-images/bf1.tif")
 
 m_bf1_gs <- m_bf1[,,1]
 #
-persp3D(z = m_bf1_gs, theta = 120)
+#persp3D(z = m_bf1_gs, theta = 120)
 
 
 d_bf1_gs <- data.frame(matrix(m_bf1_gs, ncol=1))
@@ -108,8 +114,75 @@ m_plane <- outer(rows,cols,FUN=fun)
 #
 #grid.raster(m_plane_clrd)
 
+
 # ==========================================================================
-# Save plane
+# Normalise the image using the plane
 # ==========================================================================
 
-save(m_plane, file ="qsave/m_plane.RData")
+normal <- m_bf1_gs
+
+reps <- c(1:5)
+rows <- 1:699
+cols <- 1:699
+fun <- function(i,j,fit) {
+	fit$coefficients[1] + fit$coefficients[2]*i + fit$coefficients[3]*j
+}
+for (i in reps) {
+	d_normal <- data.frame(matrix(normal, ncol=1))
+
+	d_normal <-
+	expand.grid(1:nrow(normal), 1:ncol(normal)) %>%
+	data.frame() %>%
+	cbind(d_normal)
+
+	colnames(d_normal) <- c("x", "y", "z")
+
+	fit_normal <- lm(z ~ x + y, data = d_normal)
+
+	if (is.na(fit_normal$coefficients[1])) {
+		fit_normal$coefficients[1] <- 0
+	}
+
+	if (is.na(fit_normal$coefficients[2])) {
+		fit_normal$coefficients[2] <- 0
+	}
+
+	if (is.na(fit_normal$coefficients[3])) {
+		fit_normal$coefficients[3] <- 0
+	}
+
+	plane_normal <- outer(rows,cols,fit_normal,FUN=fun)
+
+	normal <- matrix(normal, ncol = 1) - matrix(plane_normal, ncol = 1) + 0.5
+
+	if (i == length(reps)) {
+		m_bf1_gs_normal <- normal
+	}
+}
+
+
+d_bf1_gs_normal <- data.frame(matrix(m_bf1_gs_normal, ncol=1))
+
+d_bf1_normal <- cbind(d_bf1_gs_normal, d_bf1_gs_normal, d_bf1_gs_normal)
+colnames(d_bf1_normal) <- c("red", "green", "blue")
+ 
+m_bf1_normal <- array(
+  d_bf1_normal %>%
+    select(
+      red,
+      green,
+      blue
+    ) %>%
+    unlist() %>%
+    unname(),
+  dim = dim(m_bf1)
+)
+
+grid.raster(m_bf1_normal)
+
+
+# ==========================================================================
+# Save normalised image
+# ==========================================================================
+
+save(m_bf1_normal, file ="r-objects/m_bf1_normal.RData")
