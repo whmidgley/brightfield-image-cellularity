@@ -109,12 +109,12 @@ imgE_black <- imgE
 plot(imgE)
 
 
-imgBlur <- gblur(imgE, 2)
+imgBlur <- gblur(imgE, 1)
 
 plot(imgBlur)
 
-imgBlur[imgBlur>0.15] <- 1
-imgBlur[imgBlur<=0.15] <- 0
+imgBlur[imgBlur>0.98] <- 1
+imgBlur[imgBlur<=0.98] <- 0
 
 imgBlur %>% plot()
 
@@ -132,7 +132,10 @@ imgE_black <- round(imgE_black)
 #plot(imgE_black)
 # 2. Enhance edges with low pass filter
 
-hfilt <- matrix(c(1, 1, 1, 1, 1, 1, 1, 1, 1), nrow = 3) # low pass
+#hfilt <- matrix(c(1, 1, 1, 1, 1, 1, 1, 1, 1), nrow = 3) # low pass
+
+hfilt <- matrix(c(1,1,1,1,1, 1,-1,-1,-1,1, 1,-1,-8,-1,1, 1,-1,-1,-1,1, 1,1,1,1,1), nrow = 5) # low pass
+
 
 # rotate horizontal filter to obtain vertical filter
 vfilt <- t(hfilt)
