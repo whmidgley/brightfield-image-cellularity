@@ -36,15 +36,21 @@ plot(str_extract_all(roi,"(?<=X=\").+(?=\" Y=)") %>% unlist() %>% as.numeric(), 
 
 roi_attachment <- str_extract_all(roi, "(?s)<Attachment\\s*(.*?)\\s*</Attachment>") %>% unlist()
 
+remove.negative <- function(roi) {
+	roi[roi<0] <- 0
+	roi[roi>nrow(m_bf)] <- nrow(m_bf)
+	return(roi)
+}
+
 
 for (j in 1:length(roi_attachment)) {
 	assign(paste0("roi_attachment_",j,"_x"),
-	str_extract_all(roi_attachment[j],"(?<=X=\").+(?=\" Y=)") %>% unlist() %>% as.numeric())
+	str_extract_all(roi_attachment[j],"(?<=X=\").+(?=\" Y=)") %>% unlist() %>% as.numeric() %>% remove.negative())
 }
 
 for (j in 1:length(roi_attachment)) {
 	assign(paste0("roi_attachment_",j,"_y"),
-	str_extract_all(roi_attachment[j],"(?<=Y=\").+(?=\")") %>% unlist() %>% as.numeric())
+	str_extract_all(roi_attachment[j],"(?<=Y=\").+(?=\")") %>% unlist() %>% as.numeric() %>% remove.negative())
 }
 
 complete.roi <- function(roi) {

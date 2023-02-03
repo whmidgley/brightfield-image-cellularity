@@ -109,23 +109,6 @@ imgE_black <- imgE
 plot(imgE)
 
 
-imgBlur <- gblur(imgE, 1)
-
-plot(imgBlur)
-
-imgBlur[imgBlur>0.98] <- 1
-imgBlur[imgBlur<=0.98] <- 0
-
-imgBlur %>% plot()
-
-
-d_cell_area <- data.frame(matrix(imgBlur, ncol = 1))
-
-cellularity <- sum(d_cell_area)*100/nrow(d_cell_area)
-
-cat("cellularity is", round(cellularity),"%\n")
-
-
 
 imgE_black <- round(imgE_black)
 
@@ -134,7 +117,9 @@ imgE_black <- round(imgE_black)
 
 #hfilt <- matrix(c(1, 1, 1, 1, 1, 1, 1, 1, 1), nrow = 3) # low pass
 
-hfilt <- matrix(c(1,1,1,1,1, 1,-1,-1,-1,1, 1,-1,-8,-1,1, 1,-1,-1,-1,1, 1,1,1,1,1), nrow = 5) # low pass
+#hfilt <- matrix(c(1,1,1,1,1, 1,-1,-1,-1,1, 1,-1,-8,-1,1, 1,-1,-1,-1,1, 1,1,1,1,1), nrow = 5) # low pass
+hfilt <- matrix(c(1,1,1, 1,-8,1, 1,1,1), nrow = 3) # low pass
+
 
 
 # rotate horizontal filter to obtain vertical filter
@@ -149,42 +134,56 @@ hdata <- imageData(imgH)
 vdata <- imageData(imgV)
 edata <- sqrt(hdata^2 + vdata^2)
 
-
-# transform edge data to image
 imgE <- Image(edata)
-plot(imgE)
 
-imgE_white <- round(imgE)
-#imgE_white <- abs(imgE_white-1)
+imgBlur <- gblur(imgE, 2)
 
-#plot(imgE_white)
+plot(imgBlur)
 
-# Low pass filter with gblur and make binary
-#  xb <- gblur(imgE, 1)
-#  xt <- thresh(xb, offset = 0.0001)
-#  grid.raster(xt) # thresh.jpg
+imgBlur[imgBlur>0.95] <- 1
+imgBlur[imgBlur<=0.95] <- 0
+
+imgBlur %>% plot()
 
 
- xm <- bwlabel(imgE_white)
- FS <- computeFeatures.shape(xm)
- sel <- which(FS[,"s.area"] > 1000000)
- xe1 <- rmObjects(xm, sel)
- xe1 <- thresh(xe1)
 
+## transform edge data to image
+#imgE <- Image(edata)
+#plot(imgE)
+#
+#imgE_white <- round(imgE)
+##imgE_white <- abs(imgE_white-1)
+#
+##plot(imgE_white)
+#
+## Low pass filter with gblur and make binary
+##  xb <- gblur(imgE, 1)
+##  xt <- thresh(xb, offset = 0.0001)
+##  grid.raster(xt) # thresh.jpg
+#
+#
+# xm <- bwlabel(imgE_white)
+# FS <- computeFeatures.shape(xm)
+# sel <- which(FS[,"s.area"] > 1000000)
+# xe1 <- rmObjects(xm, sel)
+# xe1 <- thresh(xe1)
+#
+#
+# xm <- bwlabel(abs(xe1-1))
+# FS <- computeFeatures.shape(xm)
+# sel <- which(FS[,"s.area"] < 1000)
+# xe <- rmObjects(xm, sel)
+#
+##xe <- fillHull(xe)
+##grid.raster(xe1)
+#
+#xe[xe>1] <- 1
+#
+#cell_area <- xe
+#
+#grid.raster(cell_area)
 
- xm <- bwlabel(abs(xe1-1))
- FS <- computeFeatures.shape(xm)
- sel <- which(FS[,"s.area"] < 1000)
- xe <- rmObjects(xm, sel)
-
-#xe <- fillHull(xe)
-#grid.raster(xe1)
-
-xe[xe>1] <- 1
-
-cell_area <- xe
-
-grid.raster(cell_area)
+cell_area <- imgBlur
 
 d_cell_area <- data.frame(matrix(cell_area, ncol = 1))
 

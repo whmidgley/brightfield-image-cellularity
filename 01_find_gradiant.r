@@ -25,7 +25,7 @@ options(repr.plot.width = 15, repr.plot.height = 20)
 # ==========================================================================
 
 cat("Don't source this, the readImage() hasn't been commented out")
-m_bf1 <- readImage("brightfield-images/bf5.tif")
+m_bf1 <- readImage("brightfield-images/bf6.tif")
 m_bf1_gs <- m_bf1[,,1]
 
 # ==========================================================================
@@ -167,7 +167,7 @@ colnames(d_bf1_normal) <- c("red", "green", "blue")
  
 m_bf1_normal <- array(
   d_bf1_normal %>%
-    select(
+    dplyr::select(
       red,
       green,
       blue
