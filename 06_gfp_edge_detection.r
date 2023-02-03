@@ -83,7 +83,7 @@ img <- m_gfp
 
 
 # 1. define filter for edge detection
-hfilt <- matrix(c(1, 2, 1, 0, 0, 0, -1, -2, -1), nrow = 3) # sobel
+hfilt <- matrix(c(1, 2, 3, 2, 1, 0, 0, 0, 0, 0, -1, -2, -3, -2, -1), nrow = 5) # sobel
 
 # rotate horizontal filter to obtain vertical filter
 vfilt <- t(hfilt)
@@ -128,7 +128,7 @@ edata <- sqrt(hdata^2 + vdata^2)
 
 # transform edge data to image
 imgE <- Image(edata)
-#plot(imgE)
+plot(imgE)
 
 imgE_white <- round(imgE)
 #imgE_white <- abs(imgE_white-1)
@@ -136,14 +136,14 @@ imgE_white <- round(imgE)
 plot(imgE_white)
 
 # Low pass filter with gblur and make binary
-#  xb <- gblur(xe, 1)
-#  xt <- thresh(xb, offset = 0.0001)
-#  grid.raster(xt) # thresh.jpg
+  xb <- gblur(img[,,2], 1)
+  xt <- thresh(xb, offset = 0.0001)
+  grid.raster(xt) # thresh.jpg
 
 
- xm <- bwlabel(imgE_white)
+ xm <- bwlabel(imgE)
  FS <- computeFeatures.shape(xm)
- sel <- which(FS[,"s.area"] > 100000)
+ sel <- which(FS[,"s.area"] > 1)
  xe1 <- rmObjects(xm, sel)
  xe1 <- thresh(xe1)
 

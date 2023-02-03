@@ -34,7 +34,7 @@ img <- m_bf1_normal
 # ==========================================================================
 # Give it a go
 # ==========================================================================
-canny_edges
+#canny_edges
 
 # 1. define filter for edge detection
 hfilt <- matrix(c(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0), nrow = 5)
@@ -52,9 +52,10 @@ edata <- sqrt((hdata)^2 + (vdata)^2)
 
 # transform edge data to image
 imgE <- Image(edata)
+plot(imgE)
 #print(display(combine(img, imgH, imgV, imgE), method = "raster", all = T))
 
-display(imgH/10, method = "raster", all = T)
+display(imgH/5, method = "raster", all = T)
 
 
 grid.raster(imgH)
@@ -72,7 +73,7 @@ canny_edges <- canny_edges/255
 grid.raster(canny_edges)
 
 
-xb <- gblur(canny_edges, 2)
+xb <- gblur(canny_edges, 10)
   xt <- thresh(xb, offset = 0.0001)
   grid.raster(xt) # thresh.jpg
 

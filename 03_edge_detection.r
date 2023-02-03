@@ -106,6 +106,27 @@ display(imgE, method = "raster", all = T)
 
 imgE_black <- imgE
 
+plot(imgE)
+
+
+imgBlur <- gblur(imgE, 2)
+
+plot(imgBlur)
+
+imgBlur[imgBlur>0.15] <- 1
+imgBlur[imgBlur<=0.15] <- 0
+
+imgBlur %>% plot()
+
+
+d_cell_area <- data.frame(matrix(imgBlur, ncol = 1))
+
+cellularity <- sum(d_cell_area)*100/nrow(d_cell_area)
+
+cat("cellularity is", round(cellularity),"%\n")
+
+
+
 imgE_black <- round(imgE_black)
 
 #plot(imgE_black)
@@ -128,7 +149,7 @@ edata <- sqrt(hdata^2 + vdata^2)
 
 # transform edge data to image
 imgE <- Image(edata)
-#plot(imgE)
+plot(imgE)
 
 imgE_white <- round(imgE)
 #imgE_white <- abs(imgE_white-1)
@@ -136,7 +157,7 @@ imgE_white <- round(imgE)
 #plot(imgE_white)
 
 # Low pass filter with gblur and make binary
-#  xb <- gblur(xe, 1)
+#  xb <- gblur(imgE, 1)
 #  xt <- thresh(xb, offset = 0.0001)
 #  grid.raster(xt) # thresh.jpg
 
@@ -168,6 +189,7 @@ cellularity <- sum(d_cell_area)*100/nrow(d_cell_area)
 
 cat("cellularity is", round(cellularity),"%\n")
 
+grid.raster(abs(cell_area-1))
 
 # ==========================================================================
 # Calculate error
