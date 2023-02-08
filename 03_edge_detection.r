@@ -110,7 +110,7 @@ plot(imgE)
 
 
 
-imgE_black <- round(imgE_black)
+#imgE_black <- round(imgE_black)
 
 #plot(imgE_black)
 # 2. Enhance edges with low pass filter
@@ -118,49 +118,56 @@ imgE_black <- round(imgE_black)
 #hfilt <- matrix(c(1, 1, 1, 1, 1, 1, 1, 1, 1), nrow = 3) # low pass
 
 #hfilt <- matrix(c(1,1,1,1,1, 1,-1,-1,-1,1, 1,-1,-8,-1,1, 1,-1,-1,-1,1, 1,1,1,1,1), nrow = 5) # low pass
-hfilt <- matrix(c(1,1,1, 1,-8,1, 1,1,1), nrow = 3) # low pass
+#hfilt <- matrix(c(1,1,1, 1,-8,1, 1,1,1), nrow = 3) # low pass
 
 
-
-# rotate horizontal filter to obtain vertical filter
-vfilt <- t(hfilt)
-
-# get horizontal and vertical edges
-imgH <- filter2(imgE, hfilt, boundary="replicate")
-imgV <- filter2(imgE, vfilt, boundary="replicate")
-
-# combine edge pixel data to get overall edge data
-hdata <- imageData(imgH)
-vdata <- imageData(imgV)
-edata <- sqrt(hdata^2 + vdata^2)
-
-imgE <- Image(edata)
-
-imgBlur <- gblur(imgE, 2)
-
-plot(imgBlur)
-
-imgBlur[imgBlur>0.95] <- 1
-imgBlur[imgBlur<=0.95] <- 0
-
-imgBlur %>% plot()
-
-
-
-## transform edge data to image
+#
+## rotate horizontal filter to obtain vertical filter
+#vfilt <- t(hfilt)
+#
+## get horizontal and vertical edges
+#imgH <- filter2(imgE, hfilt, boundary="replicate")
+#imgV <- filter2(imgE, vfilt, boundary="replicate")
+#
+## combine edge pixel data to get overall edge data
+#hdata <- imageData(imgH)
+#vdata <- imageData(imgV)
+#edata <- sqrt(hdata^2 + vdata^2)
+#
 #imgE <- Image(edata)
-#plot(imgE)
 #
+#imgBlur <- gblur(imgE, 2)
+#
+#plot(imgBlur)
+#
+#imgBlur[imgBlur>0.95] <- 1
+#imgBlur[imgBlur<=0.95] <- 0
+#
+#imgBlur %>% plot()
+
+
+# transform edge data to image
+imgE <- Image(edata)
+plot(imgE)
+
 #imgE_white <- round(imgE)
-##imgE_white <- abs(imgE_white-1)
-#
-##plot(imgE_white)
-#
-## Low pass filter with gblur and make binary
-##  xb <- gblur(imgE, 1)
-##  xt <- thresh(xb, offset = 0.0001)
-##  grid.raster(xt) # thresh.jpg
-#
+#imgE_white <- abs(imgE_white-1)
+
+#plot(imgE_white)
+
+
+imgEsq <- imgE^2
+plot(imgE)
+
+
+# Low pass filter with gblur and make binary
+  xb <- gblur(imgE, 1)
+#  xt <- thresh(xb, offset = 0.0001)
+  plot(xb) # thresh.jpg
+
+m_bf1_blur <- xb
+save(m_bf1_blur, file ="r-objects/m_bf1_blur.RData")
+
 #
 # xm <- bwlabel(imgE_white)
 # FS <- computeFeatures.shape(xm)
@@ -181,66 +188,71 @@ imgBlur %>% plot()
 #
 #cell_area <- xe
 #
+#
+#
+#
+#
+#
 #grid.raster(cell_area)
-
-cell_area <- imgBlur
-
-d_cell_area <- data.frame(matrix(cell_area, ncol = 1))
-
-cellularity <- sum(d_cell_area)*100/nrow(d_cell_area)
-
-cat("cellularity is", round(cellularity),"%\n")
-
-grid.raster(abs(cell_area-1))
-
-# ==========================================================================
-# Calculate error
-# ==========================================================================
-
-
-
-# 1. define filter for edge detection
-hfilt <- matrix(c(1, 2, 1, 0, 0, 0, -1, -2, -1), nrow = 3) # sobel
-
-# rotate horizontal filter to obtain vertical filter
-vfilt <- t(hfilt)
-
-# get horizontal and vertical edges
-imgH <- filter2(cell_area, hfilt, boundary="replicate")
-imgV <- filter2(cell_area, vfilt, boundary="replicate")
-
-# combine edge pixel data to get overall edge data
-hdata <- imageData(imgH)
-vdata <- imageData(imgV)
-edata <- sqrt((hdata/2)^2 + (vdata*2)^2)
-
-# transform edge data to image
-imgE <- Image(edata)
-#print(display(combine(img, imgH, imgV, imgE), method = "raster", all = T))
-
-display(round(imgE), method = "raster", all = T)
-
-d_error <- data.frame(matrix(round(imgE), ncol=1))
-d_error[d_error>1] <- 1
-
-p_error <- sum(d_error)*100/nrow(d_error)
-
-
-# ==========================================================================
-# Take account for error
-# ==========================================================================
-
-#bf5
-31.8655/(cellularity*p_error)
-cellularity*p_error*0.1075
-
-#bf6
-48.6454/(cellularity*p_error)
-cellularity*p_error*0.1224
-
-#bf7
-14.64481/(cellularity*p_error)
-cellularity*p_error*0.1567
-
-
-cellularity*p_error*0.13
+#
+#cell_area <- imgBlur
+#
+#d_cell_area <- data.frame(matrix(cell_area, ncol = 1))
+#
+#cellularity <- sum(d_cell_area)*100/nrow(d_cell_area)
+#
+#cat("cellularity is", round(cellularity),"%\n")
+#
+#grid.raster(abs(cell_area-1))
+#
+## ==========================================================================
+## Calculate error
+## ==========================================================================
+#
+#
+#
+## 1. define filter for edge detection
+#hfilt <- matrix(c(1, 2, 1, 0, 0, 0, -1, -2, -1), nrow = 3) # sobel
+#
+## rotate horizontal filter to obtain vertical filter
+#vfilt <- t(hfilt)
+#
+## get horizontal and vertical edges
+#imgH <- filter2(cell_area, hfilt, boundary="replicate")
+#imgV <- filter2(cell_area, vfilt, boundary="replicate")
+#
+## combine edge pixel data to get overall edge data
+#hdata <- imageData(imgH)
+#vdata <- imageData(imgV)
+#edata <- sqrt((hdata/2)^2 + (vdata*2)^2)
+#
+## transform edge data to image
+#imgE <- Image(edata)
+##print(display(combine(img, imgH, imgV, imgE), method = "raster", all = T))
+#
+#display(round(imgE), method = "raster", all = T)
+#
+#d_error <- data.frame(matrix(round(imgE), ncol=1))
+#d_error[d_error>1] <- 1
+#
+#p_error <- sum(d_error)*100/nrow(d_error)
+#
+#
+## ==========================================================================
+## Take account for error
+## ==========================================================================
+#
+##bf5
+#31.8655/(cellularity*p_error)
+#cellularity*p_error*0.1075
+#
+##bf6
+#48.6454/(cellularity*p_error)
+#cellularity*p_error*0.1224
+#
+##bf7
+#14.64481/(cellularity*p_error)
+#cellularity*p_error*0.1567
+#
+#
+#cellularity*p_error*0.13

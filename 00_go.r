@@ -25,8 +25,9 @@ m_bf1_gs <- m_bf1[,,1]
 
 source("01_find_gradiant.r")
 source("03_edge_detection.r")
+source("02_find_cell_area.r")
 
-cellularities[j,] <- c(sub('.+/(.+)', '\\1', images[j]), print(cellularity))
+cellularities[j,] <- c(sub('.+/(.+)', '\\1', images[j]), print(computer_cellularity))
 }
 
 write.csv(cellularities, "cellularities.csv", row.names = FALSE)

@@ -24,13 +24,13 @@ options(repr.plot.width = 15, repr.plot.height = 20)
 
 load("r-objects/m_bf1_normal.RData")
 
-m_bf <- readImage("brightfield-images/bf5.tif")
+m_bf <- readImage("brightfield-images/bf7.tif")
 #m_bf <- array(m_bf, dim = dim(m_bf))
 #m_bf_gs <- m_bf[,,1]
 #m_bf_gs_normal <- m_bf_normal[,,1]
 
 
-roi <- paste(readLines("brightfield-images/roi5.roi"), collapse="\n")
+roi <- paste(readLines("brightfield-images/roi7.roi"), collapse="\n")
 
 plot(str_extract_all(roi,"(?<=X=\").+(?=\" Y=)") %>% unlist() %>% as.numeric(), str_extract_all(roi,"(?<=Y=\").+(?=\")") %>% unlist() %>% as.numeric())
 
@@ -80,7 +80,7 @@ plot <- paste(unlist(plot), collapse="")
 
 roi_plot <- eval(parse(text=plot)) +
 		scale_x_continuous(limits = c(0,nrow(m_bf)), expand = c(0, 0)) +
-  		scale_y_continuous(limits = c(0,nrow(m_bf)), expand = c(0, 0)) +
+  		scale_y_continuous(limits = c(0,ncol(m_bf)), expand = c(0, 0)) +
 		theme_void()
 
 

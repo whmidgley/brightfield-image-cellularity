@@ -25,7 +25,7 @@ options(repr.plot.width = 15, repr.plot.height = 20)
 
 load("r-objects/m_bf1_normal.RData")
 
-m_bf <- readImage("brightfield-images/bf5.tif")
+m_bf <- readImage("brightfield-images/bf7.tif")
 
 m_roi <- readImage("roi_plot.tiff")
 
@@ -35,4 +35,21 @@ m_roi <- abs(m_roi-1)
 
 plot(m_roi)
 
-(sum(m_roi)*100)/(nrow(m_roi)*ncol(m_roi))
+# Fix the ggplot borders!!
+
+
+
+
+
+#roi5:
+#human_cellularity <- (sum(m_roi)*100)/(768^2)
+
+
+#roi6:
+#human_cellularity <- (sum(m_roi)*100)/(698^2)
+
+#roi7:
+human_cellularity <- (sum(m_roi)*100)/(nrow(m_roi)*ncol(m_roi))
+
+
+save(human_cellularity, file ="r-objects/human_cellularity.RData")

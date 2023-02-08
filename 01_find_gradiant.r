@@ -24,9 +24,9 @@ options(repr.plot.width = 15, repr.plot.height = 20)
 # Read images
 # ==========================================================================
 
-cat("Don't source this, the readImage() hasn't been commented out")
-m_bf1 <- readImage("brightfield-images/bf6.tif")
-m_bf1_gs <- m_bf1[,,1]
+#cat("Don't source this, the readImage() hasn't been commented out")
+#m_bf1 <- readImage("brightfield-images/bf2.tif")
+#m_bf1_gs <- m_bf1[,,1]
 
 # ==========================================================================
 # Let's have a look
