@@ -151,20 +151,20 @@ grid.raster(m_bf1_normal)
 # Take the k-means from a good example and use these clusters:
 
 segment <- function(pixel) {
-  cluster1 <- abs(pixel-k_bf1_normal$centers[1,1])
-  cluster2 <- abs(pixel-k_bf1_normal$centers[2,1])
-  cluster3 <- abs(pixel-k_bf1_normal$centers[3,1])
-  cluster4 <- abs(pixel-k_bf1_normal$centers[4,1])
-  cluster5 <- abs(pixel-k_bf1_normal$centers[5,1])
+  cluster1 <- abs(pixel-centres[1])
+  cluster2 <- abs(pixel-centres[2])
+  cluster3 <- abs(pixel-centres[3])
+  cluster4 <- abs(pixel-centres[4])
+  cluster5 <- abs(pixel-centres[5])
 
   minimum <- min(c(cluster1, cluster2, cluster3, cluster4, cluster5))
 
   pixel <- case_when(
-    minimum == cluster1 ~ k_bf1_normal$centers[1,1],
-    minimum == cluster2 ~ k_bf1_normal$centers[2,1],
-    minimum == cluster3 ~ k_bf1_normal$centers[3,1],
-    minimum == cluster4 ~ k_bf1_normal$centers[4,1],
-    minimum == cluster5 ~ k_bf1_normal$centers[5,1]
+    minimum == cluster1 ~ centres[1],
+    minimum == cluster2 ~ centres[2],
+    minimum == cluster3 ~ centres[3],
+    minimum == cluster4 ~ centres[4],
+    minimum == cluster5 ~ centres[5]
   )
 
   return(pixel)
@@ -176,9 +176,9 @@ colnames(d_bf1_normal_segmented) <- c("red", "green", "blue")
 
 
 prop_background <- d_bf1_normal_segmented %>% dplyr::filter(
-  red == min(k_bf1_normal$centers[,1])
+  red == min(centres[1])
   ) %>%
-nrow()/nrow(d_bf1_normal_segmented_gs)
+nrow()/nrow(d_bf1_normal_segmented_gs) # nolint
 
 computer_cellularity <- (1-prop_background)*100
 
