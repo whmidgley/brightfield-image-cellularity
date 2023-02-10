@@ -44,3 +44,5 @@ cat("cellularity is", round(computer_cellularity),"% as defined by the computer\
 m_bf_blur_segmented <- cbind(d_bf_blur_segmented_gs, d_bf_blur_segmented_gs, d_bf_blur_segmented_gs) %>% unlist() %>% array(dim = dim(m_bf))
 
 grid.raster(m_bf_blur_segmented)
+
+writeImage(m_bf_blur_segmented, paste0("segmented/", sub('.+/(.+)', '\\1', images[j]) %>% str_replace_all(".tif", "_segmented.tif")))

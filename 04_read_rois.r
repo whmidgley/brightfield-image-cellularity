@@ -24,13 +24,13 @@ options(repr.plot.width = 15, repr.plot.height = 20)
 
 load("r-objects/m_bf1_normal.RData")
 
-m_bf <- readImage("brightfield-images/bf7.tif")
+m_bf <- readImage("brightfield-images/bf17.tif")
 #m_bf <- array(m_bf, dim = dim(m_bf))
 #m_bf_gs <- m_bf[,,1]
 #m_bf_gs_normal <- m_bf_normal[,,1]
 
 
-roi <- paste(readLines("brightfield-images/roi7.roi"), collapse="\n")
+roi <- paste(readLines("brightfield-images/rois/roi17.roi"), collapse="\n")
 
 plot(str_extract_all(roi,"(?<=X=\").+(?=\" Y=)") %>% unlist() %>% as.numeric(), str_extract_all(roi,"(?<=Y=\").+(?=\")") %>% unlist() %>% as.numeric())
 

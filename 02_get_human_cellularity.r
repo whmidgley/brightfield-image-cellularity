@@ -75,17 +75,11 @@ for (j in 1:length(reports)) {
 }
 
 cellularities <- cbind(automated_cellularities, human_cellularities[,2])
+colnames(cellularities) <- c("image_name", "automated_cellularity", "human_cellularity")
 
-cellularities %>% mutate(
-	automated_cellularity = cellularity,
-	error = automated_cellularity - human_cellularity
-	) %>%
-	select(
-		image_name,
-		automated_cellularity,
-		human_cellularity,
-		error
-		)
+cellularities <- cellularities %>% mutate(
+	error = as.numeric(automated_cellularity) - as.numeric(human_cellularity)
+	)
 
 write.csv(human_cellularities, "human_cellularities.csv", row.names = FALSE)
 write.csv(cellularities, "cellularities.csv", row.names = FALSE)
