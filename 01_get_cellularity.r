@@ -91,7 +91,7 @@ colnames(cellularities) <- c("image_name", "cellularity")
 
 for (j in 1:length(images)) {
 	cat("Image",j,"=================\n")
-	m_bf <- readImage(paste0(images[j]))
+	m_bf <- suppressWarnings(readImage(paste0(images[j])))
 
 source("01a_remove_gradient.r")
 source("01b_detect_edges.r")
