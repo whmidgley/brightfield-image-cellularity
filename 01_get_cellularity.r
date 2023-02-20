@@ -62,6 +62,14 @@ options(repr.plot.width = 15, repr.plot.height = 20)
 
 images <- list.files(path = "brightfield-images", pattern = "tif", recursive = FALSE, full.names = TRUE) 
 
+cellularities <- data.frame(matrix(nrow=length(images), ncol=2))
+colnames(cellularities) <- c("image_name", "cellularity")
+
+image_names <- sub('.+/(.+)', '\\1', images)
+meta_cellularities <- image_names
+
+for (run_no in 1:3) {
+
 # sample 30%
 sample_size <- round(length(images)*0.3)
 samples <- sample(images, size = sample_size)
@@ -122,8 +130,6 @@ background 	<- min(colours1$centres)
 # Calculate cellularities
 # ==========================================================================
 
-cellularities <- data.frame(matrix(nrow=length(images), ncol=2))
-colnames(cellularities) <- c("image_name", "cellularity")
 
 for (j in 1:length(images)) {
 	cat("Image",j,"=================\n")
@@ -133,8 +139,23 @@ source("01a_remove_gradient.r")
 source("01b_detect_edges.r")
 source("01c_k-means.r")
 
-cellularities[j,] <- c(sub('.+/(.+)', '\\1', images[j]), print(computer_cellularity))
+cellularities[j,] <- c(image_names[j], print(computer_cellularity))
 }
 
-write.csv(cellularities, "automated_cellularities.csv", row.names = FALSE)
+meta_cellularities <- cbind(meta_cellularities, cellularities[,2])
+}
+
+meta_cellularities <- as.data.frame(meta_cellularities)
+colnames(meta_cellularities) <- c("image_names", "run_1", "run_2", "run_3")
+
+meta_cellularities <- meta_cellularities %>% mutate(
+	run_1 = as.numeric(run_1),
+	run_2 = as.numeric(run_2),
+	run_3 = as.numeric(run_3),
+	mean_cellularities = (run_1 + run_2 + run_3)/3
+	)
+
+meta_cellularities <- meta_cellularities[,c(1,5)]
+
+write.csv(meta_cellularities, "automated_cellularities.csv", row.names = FALSE)
 beep()
