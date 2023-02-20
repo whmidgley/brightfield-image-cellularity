@@ -11,27 +11,30 @@ d_bf_blur <- data.frame(matrix(m_bf_blur, ncol=1))
 
 # Take the k-means from a good example and use these clusters:
 
-segment <- function(pixel) {
-  cluster1 <- abs(pixel-centres[1])
-  cluster2 <- abs(pixel-centres[2])
-  cluster3 <- abs(pixel-centres[3])
-  cluster4 <- abs(pixel-centres[4])
-  cluster5 <- abs(pixel-centres[5])
+cluster1 <- abs(d_bf_blur-centres[1])
+cluster2 <- abs(d_bf_blur-centres[2])
+cluster3 <- abs(d_bf_blur-centres[3])
+cluster4 <- abs(d_bf_blur-centres[4])
+cluster5 <- abs(d_bf_blur-centres[5])
 
-  minimum <- min(c(cluster1, cluster2, cluster3, cluster4, cluster5))
-
-  pixel <- case_when(
-    minimum == cluster1 ~ centres[1],
-    minimum == cluster2 ~ centres[2],
-    minimum == cluster3 ~ centres[3],
-    minimum == cluster4 ~ centres[4],
-    minimum == cluster5 ~ centres[5]
+cluster_errors <- data.frame(
+  cluster1 = cluster1,
+  cluster2 = cluster2,
+  cluster3 = cluster3,
+  cluster4 = cluster4,
+  cluster5 = cluster5
   )
 
-  return(pixel)
-}
+min_error <- do.call(pmin, cluster_errors)
 
-d_bf_blur_segmented_gs <- sapply(d_bf_blur[,1], FUN = segment) %>% as.data.frame()
+d_bf_blur_segmented_gs <- case_when(
+  min_error == cluster1 ~ centres[1],
+  min_error == cluster2 ~ centres[2],
+  min_error == cluster3 ~ centres[3],
+  min_error == cluster4 ~ centres[4],
+  min_error == cluster5 ~ centres[5]
+)
+
 
 prop_background <-
   d_bf_blur_segmented_gs[d_bf_blur_segmented_gs == background] %>%
