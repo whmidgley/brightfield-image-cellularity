@@ -38,7 +38,7 @@ d_bf_blur_segmented_gs <- case_when(
 
 prop_background <-
   d_bf_blur_segmented_gs[d_bf_blur_segmented_gs == background] %>%
-    length() / nrow(d_bf_blur_segmented_gs)
+    length() / length(d_bf_blur_segmented_gs)
 
 computer_cellularity <- (1-prop_background)*100
 
