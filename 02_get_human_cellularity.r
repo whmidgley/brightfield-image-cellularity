@@ -87,7 +87,7 @@ human_cellularities <- cbind(human_cellularities, human_names)
 automated_cellularities <- cbind(automated_cellularities, auto_names)
 
 cellularities <-
-inner_join(automated_cellularities, human_cellularities, by = c("auto_names" = "human_names")) %>% mutate(
+full_join(automated_cellularities, human_cellularities, by = c("auto_names" = "human_names")) %>% mutate(
 	name = auto_names,
 	auto_cellularity = mean_cellularities,
 	error = as.numeric(mean_cellularities) - as.numeric(human_cellularity),
