@@ -1,5 +1,5 @@
 
-file <- paste0(path, "/Chart_0.csv")
+file <- paste0(path)
 acellular <- str_detect(file, "acellular")
 
 if (file.exists(file)) {
