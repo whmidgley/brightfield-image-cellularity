@@ -68,10 +68,8 @@ colnames(cellularities) <- c("image_name", "cellularity")
 image_names <- sub('.+/(.+)', '\\1', images)
 meta_cellularities <- image_names
 
-for (run_no in 1:3) {
-
 # sample 30%
-sample_size <- round(length(images)*0.3)
+sample_size <- round(length(images)*0.04)
 samples <- sample(images, size = sample_size)
 
 image_sizes <- c()
@@ -142,20 +140,4 @@ source("01c_k-means.r")
 cellularities[j,] <- c(image_names[j], print(computer_cellularity))
 }
 
-meta_cellularities <- cbind(meta_cellularities, cellularities[,2])
-}
-
-meta_cellularities <- as.data.frame(meta_cellularities)
-colnames(meta_cellularities) <- c("image_names", "run_1", "run_2", "run_3")
-
-meta_cellularities <- meta_cellularities %>% mutate(
-	run_1 = as.numeric(run_1),
-	run_2 = as.numeric(run_2),
-	run_3 = as.numeric(run_3),
-	mean_cellularities = (run_1 + run_2 + run_3)/3
-	)
-
-meta_cellularities <- meta_cellularities[,c(1,5)]
-
-write.csv(meta_cellularities, "automated_cellularities.csv", row.names = FALSE)
 beep()
