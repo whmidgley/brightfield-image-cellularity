@@ -62,82 +62,52 @@ options(repr.plot.width = 15, repr.plot.height = 20)
 
 images <- list.files(path = "brightfield-images", pattern = "tif", recursive = FALSE, full.names = TRUE) 
 
+images <- sample(images, 20)
+
+
 cellularities <- data.frame(matrix(nrow=length(images), ncol=2))
 colnames(cellularities) <- c("image_name", "cellularity")
 
 image_names <- sub('.+/(.+)', '\\1', images)
-meta_cellularities <- image_names
-
-# sample 30%
-sample_size <- round(length(images)*0.04)
-samples <- sample(images, size = sample_size)
-
-image_sizes <- c()
-for (j in 1:sample_size) {
-	assign(paste0("m_bf"),
-		suppressWarnings(readImage(paste0(samples[j])))
-		)
-
-	source("01a_remove_gradient.r")
-	source("01b_detect_edges.r")
-	
-	image_sizes[j] <- ncol(m_bf_blur)
-
-	assign(paste0("m_sample_blur", j),
-		m_bf_blur
-		)
-}
-
-min_size <- min(image_sizes)
-
-d_sample_blur <- c()
-for (j in 1:sample_size) {
-	assign(paste0("m_sample_blur", j),
-		get(paste0("m_sample_blur", j))[1:min_size, 1:min_size]
-		)
-	d_sample_blur[j] <- get(paste0("m_sample_blur", j)) %>% matrix(ncol = 1) %>% as.data.frame()
-}
-
-d_sample_blur_long <- d_sample_blur[1]
-	for (j in 2:sample_size) {
-		assign("d_sample_blur_long",
-			rbind(d_sample_blur_long, d_sample_blur[j]))
-	}
-
-d_sample_blur_long <- cbind(d_sample_blur_long, d_sample_blur_long, d_sample_blur_long)
-
-m_sample_blur <- unlist(d_sample_blur_long) %>% array(dim = c(min_size, sample_size*min_size))
-
-
-m_sample_blur <- m_sample_blur/max(m_sample_blur)
-d_sample_blur <- data.frame(matrix(m_sample_blur, ncol=1))
-
-k_sample_blur <- kmeans(d_sample_blur, 4)
-
-d_sample_blur_k <- d_sample_blur
-
-d_sample_blur_k$label <- k_sample_blur$cluster
-
-colours1 <- data.frame(k_sample_blur$centers, c(1:4))
-colnames(colours1) <- c("centres","label")
-
-centres 		<- colours1$centres
-background 	<- min(colours1$centres)
 
 # ==========================================================================
 # Calculate cellularities
 # ==========================================================================
+
+blur_numbers <- c(0:25)
+cut_off_numbers <- c(1:15)
+
+grid_search <- matrix(nrow = length(blur_numbers), ncol = length(cut_off_numbers))
+
+
+#for (blurno in blur_numbers) {	
+blurno <- 1
+for (cut_offno in cut_off_numbers) {
+
+blur <- blurno/10
+cut_off <- cut_offno/25
 
 
 for (j in 1:length(images)) {
 	cat("Image",j,"=================\n")
 	m_bf <- suppressWarnings(readImage(paste0(images[j])))
 
-source("01a_remove_gradient.r")
+source("01a_remove_gradient.r")  
 source("01b_detect_edges.r")
-source("01c_k-means.r")
+source("01c_cut_off.r")
 
 cellularities[j,] <- c(image_names[j], print(computer_cellularity))
+}
+
+write.csv(cellularities, "automated_cellularities.csv", row.names = FALSE)
+
+source("02_get_human_cellularity.r")
+
+mean_error <- mean(cellularities$error, na.rm = TRUE)
+
+gridsearch[blurno, cut_offno] <- mean_error
+
+#}
 }
 
 beep()

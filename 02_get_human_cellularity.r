@@ -89,8 +89,8 @@ automated_cellularities <- cbind(automated_cellularities, auto_names)
 cellularities <-
 full_join(automated_cellularities, human_cellularities, by = c("auto_names" = "human_names")) %>% mutate(
 	name = auto_names,
-	auto_cellularity = mean_cellularities,
-	error = as.numeric(mean_cellularities) - as.numeric(human_cellularity),
+	auto_cellularity = cellularity,
+	error = as.numeric(cellularity) - as.numeric(human_cellularity),
 	over_10perc_off_flg = error > 10
 	) %>% select(
 	name,
