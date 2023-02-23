@@ -24,4 +24,4 @@ cat("cellularity is", round(computer_cellularity),"% as defined by the computer\
 
 m_bf_cut_off <- cbind(d_bf_cut_off, d_bf_cut_off, d_bf_cut_off) %>% unlist() %>% array(dim = dim(m_bf_blur))
 
-grid.raster(m_bf_cut_off)
+#grid.raster(m_bf_cut_off)

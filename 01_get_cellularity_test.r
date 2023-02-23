@@ -74,7 +74,7 @@ image_names <- sub('.+/(.+)', '\\1', images)
 # Calculate cellularities
 # ==========================================================================
 
-blur_numbers <- c(0:15)
+blur_numbers <- c(1:15)
 cut_off_numbers <- c(1:10)
 
 grid_search <- matrix(nrow = length(blur_numbers), ncol = length(cut_off_numbers))
@@ -86,12 +86,17 @@ for (cut_offno in cut_off_numbers) {
 blur <- blurno/8
 cut_off <- cut_offno/50
 
+cat(paste0("blur is ", blur, "\n"))
+cat(paste0("cut off is ", cut_off, "\n"))
+
 auto_cellularities <- data.frame(matrix(ncol = 2, nrow = length(image_names)))
 colnames(auto_cellularities) <- c("name", "cellularity")
 
 for (j in 1:length(images)) {
 	cat("Image",j,"=================\n")
 	m_bf <- suppressWarnings(readImage(paste0(images[j])))
+
+cat(paste0(blurno, ".", cut_offno, " out of 15.10", "\n"))
 
 source("01a_remove_gradient.r")  
 source("01b_detect_edges.r")
@@ -111,6 +116,7 @@ grid_search[blurno, cut_offno] <- mean_error
 }
 }
 
-plot(x = cut_off_numbers, y = grid_search[1,]^2)
+plot(x = cut_off_numbers/50, y = grid_search[1,]^2)
+plot(x = blur_numbers/8, y = grid_search[,3]^2)
 
 beep()
