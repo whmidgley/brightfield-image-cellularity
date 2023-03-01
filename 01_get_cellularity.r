@@ -114,13 +114,13 @@ m_sample_blur <- unlist(d_sample_blur_long) %>% array(dim = c(min_size, sample_s
 m_sample_blur <- m_sample_blur/max(m_sample_blur)
 d_sample_blur <- data.frame(matrix(m_sample_blur, ncol=1))
 
-k_sample_blur <- kmeans(d_sample_blur, 5)
+k_sample_blur <- kmeans(d_sample_blur, 4)
 
 d_sample_blur_k <- d_sample_blur
 
 d_sample_blur_k$label <- k_sample_blur$cluster
 
-colours1 <- data.frame(k_sample_blur$centers, c(1:5))
+colours1 <- data.frame(k_sample_blur$centers, c(1:4))
 colnames(colours1) <- c("centres","label")
 
 centres 		<- colours1$centres
