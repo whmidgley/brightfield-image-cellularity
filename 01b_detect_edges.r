@@ -31,7 +31,7 @@ edata <- sqrt((hdata/2)^2 + (vdata*2)^2)
 imgE <- Image(edata)
 
 # Low pass filter with gblur
-  xb <- gblur(imgE, blur)
+  xb <- gblur(imgE, 0.7)
 #  plot(xb)
 
 m_bf_blur <- xb
