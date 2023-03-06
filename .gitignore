@@ -40,12 +40,11 @@ vignettes/*.pdf
 
 # Images with sensitive names
 brightfield-images/20190321*
-brightfield-images/20190320*
+brightfield-images/20190322*
 
 segmented/20190321*
 segmented/20190320*
 
-brightfield-images/**/20190321/
-brightfield-images/**/20190320/
+brightfield-images/reports/
 
 automated_cellularities.csv
