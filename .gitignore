@@ -3,7 +3,7 @@
 .Rapp.history
 
 # Session Data files
-/*.RData
+r-objects/
 
 # User-specific files
 .Ruserdata
@@ -47,4 +47,6 @@ segmented/20190322*
 
 brightfield-images/reports/
 
-automated_cellularities.csv 
+automated_cellularities.csv
+human_cellularities.csv
+cellularities.csv
