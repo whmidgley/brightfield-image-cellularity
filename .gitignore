@@ -37,3 +37,10 @@ vignettes/*.pdf
 
 # R Environment Variables
 .Renviron
+
+# Images with sensitive names
+/20190321*
+/20190320*
+
+/*/20190321/*
+/*/20190320/*
