@@ -39,8 +39,11 @@ vignettes/*.pdf
 .Renviron
 
 # Images with sensitive names
-/20190321*
-/20190320*
+brightfield-images/20190321*
+brightfield-images/20190320*
 
-/*/20190321/
-/*/20190320/
+segmented/20190321*
+segmented/20190320*
+
+brightfield-images/**/20190321/
+brightfield-images/**/20190320/
