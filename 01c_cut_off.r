@@ -10,7 +10,7 @@ m_bf_blur <- m_bf_blur/max(m_bf_blur)
 d_bf_blur <- data.frame(matrix(m_bf_blur, ncol=1))
 
 d_bf_cut_off <- case_when(
-	d_bf_blur < 0.05 ~ 0,
+	d_bf_blur < 0.113 ~ 0,
 	TRUE ~ 1)
 
 prop_background <-
