@@ -3,7 +3,7 @@
 .Rapp.history
 
 # Session Data files
-.RData
+r-objects/
 
 # User-specific files
 .Ruserdata
@@ -37,3 +37,16 @@ vignettes/*.pdf
 
 # R Environment Variables
 .Renviron
+
+# Images with sensitive names
+brightfield-images/20190321*
+brightfield-images/20190322*
+
+segmented/20190321*
+segmented/20190322*
+
+brightfield-images/reports/
+
+automated_cellularities.csv
+human_cellularities.csv
+cellularities.csv
