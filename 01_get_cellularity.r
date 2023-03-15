@@ -53,7 +53,6 @@ for (pkg in pkgs) {
 		)
 }
 
-options(digits=20)  # this allows R to use decimals up to 20 places
 options(repr.plot.width = 15, repr.plot.height = 20)
 
 # ==========================================================================
@@ -78,7 +77,7 @@ for (j in 1:length(images)) {
 	cat("Image",j,"=================\n")
 	m_bf <- suppressWarnings(readImage(paste0(images[j])))
 
-source("01a_remove_gradient.r")  
+source("01a_remove_gradient.r")
 source("01b_detect_edges.r")
 source("01c_cut_off.r")
 
