@@ -32,7 +32,7 @@ imgE <- Image(edata)
 
 plot(imgE)
 # Low pass filter with gblur
-xb <- gblur(imgE, 1.3)
+xb <- gblur(imgE, 1.464)
 
 xb <- (xb - min(xb)) / (max(xb) - min(xb))
 

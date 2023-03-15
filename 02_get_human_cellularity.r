@@ -67,7 +67,7 @@ human_names <- strsplit(reports, split = "/")
 human_names <- as.data.frame(human_names)
 human_names <- paste(human_names[4,], human_names[5,])
 
-auto_names <- strsplit(automated_cellularities[,1], split = " ") %>% as.data.frame()
+auto_names <- strsplit(automated_cellularities[,1], split = " ")[1:112] %>% as.data.frame()
 auto_names <- paste(auto_names[1,], auto_names[2,], auto_names[3,], auto_names[4,] %>% str_extract("Image..."))
 
 human_names <- strsplit(human_names, split = " ") %>% as.data.frame()
@@ -83,7 +83,7 @@ for (j in 1:length(reports)) {
 }
 
 human_cellularities <- cbind(human_cellularities, human_names)
-automated_cellularities <- cbind(automated_cellularities, auto_names)
+automated_cellularities <- cbind(automated_cellularities[1:112,], auto_names)
 
 cellularities <-
 full_join(automated_cellularities, human_cellularities, by = c("auto_names" = "human_names")) %>% mutate(
