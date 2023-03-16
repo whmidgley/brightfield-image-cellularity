@@ -16,12 +16,14 @@ d_bf_cut_off <- case_when(
 m_bf_cut_off <- Image(matrix(d_bf_cut_off, ncol = ncol(m_bf_blur)))
 
 plot(m_bf_cut_off)
-
+ 
 xb <- bwlabel(m_bf_cut_off)
 FS <- computeFeatures.shape(xb)
 sel <- which(FS[,"s.area"] < 500)
 xe <- rmObjects(xb, sel)
 plot(xe)
+ 
+m_bf_segmented <- xe
 
 hfilt <- matrix(c(1, 2, 1, 0, 0, 0, -1, -2, -1), nrow = 3) # sobel
 
@@ -40,6 +42,8 @@ edata <- sqrt((hdata/2)^2 + (vdata*2)^2)
 # transform edge data to image
 imgE <- Image(edata)
 imgE <- matrix(case_when(imgE < 0.5 ~ 0, imgE >= 0.5 ~ 1), ncol = ncol(imgE)) %>% Image()
+
+m_bf_edges <- imgE
 
 plot(imgE)
 

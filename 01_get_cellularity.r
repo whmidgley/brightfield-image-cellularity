@@ -67,6 +67,14 @@ colnames(cellularities) <- c("image_name", "cellularity")
 image_names <- sub('.+/(.+)', '\\1', images)
 
 # ==========================================================================
+# Check I have the same number of reports as images
+# ==========================================================================
+
+reports <- list.files("Chart_0.csv", path = "brightfield-images/reports", recursive = TRUE, full.names = TRUE) 
+
+if (length(images) != length(reports)) warning("No. images does not equal no. reports")
+
+# ==========================================================================
 # Calculate cellularities
 # ==========================================================================
 
