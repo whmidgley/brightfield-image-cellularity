@@ -10,7 +10,7 @@ m_bf_blur <- m_bf_blur/max(m_bf_blur)
 d_bf_blur <- data.frame(matrix(m_bf_blur, ncol=1))
 
 d_bf_cut_off <- case_when(
-	d_bf_blur < 0.1 ~ 0,
+	d_bf_blur < 0.07 ~ 0,
 	TRUE ~ 1)
 
 m_bf_cut_off <- Image(matrix(d_bf_cut_off, ncol = ncol(m_bf_blur)))
@@ -52,7 +52,9 @@ prop_background <-
   xe[xe == 0] %>%
     length() / length(d_bf_cut_off)
 
-computer_cellularity <- ((1-prop_background)-(1-prop_background_edge))*100
+error_factor <- 1.5
+
+computer_cellularity <- ((1-prop_background)-(1-prop_background_edge)*error_factor)*100
 
 cat("cellularity is", round(computer_cellularity),"% as defined by the computer\n")
 
