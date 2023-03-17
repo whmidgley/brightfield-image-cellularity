@@ -41,9 +41,12 @@ vignettes/*.pdf
 # Images with sensitive names
 brightfield-images/20190321*
 brightfield-images/20190322*
+brightfield-images/20190531*
 
 segmented/20190321*
 segmented/20190322*
+segmented/20190531*
+
 
 brightfield-images/reports/
 
