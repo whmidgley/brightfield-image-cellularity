@@ -8,7 +8,7 @@ format:
     code-tools: TRUE
 ---
 ```{r}
-#| include: FALSE
+#| include: false
 
 setwd("C:\\Users\\william.midgley\\Documents\\Personal development\\Amy's PhD\\cell-analysis")
 library(tidyverse)
@@ -116,13 +116,13 @@ Sometimes, this doesn't remove all gradients as there can be overlapping gradien
 We then used a sobel edge detector kernel (see below) to detect the edges of the image (Fig.7a)
 
 ```{r}
-#| include: FALSE
+#| include: false
 source("01b_detect_edges.r")
 ```
 ```{r}
 cat("Table: Vertical sobel kernel")
 print(hfilt)
-print("Table: Horizontal sobel kernel")
+cat("Table: Horizontal sobel kernel")
 print(vfilt)
 ```
 
@@ -140,12 +140,15 @@ Fig.7b: Blurred edge detected image
 plot(xb)
 ```
 
+There is great variation within these images. Some images have very distinct cellular versus acellular regions, whereas on some images, it is hard to distinguish between the two. Therefore, on particularly smooth images (those with a low average brightness after edge detection *check this*), we brightened the image by cutting off the brightest pixels and normalising the rest of the pixels back to 0-1 to help increase detection of cells.
+
 #### Applying a cut off
 
 At this point, cellular area (which has a lot of edges in) is generally bright and acellular area (which is more smooth) is generally dark. Therefore, we applied a cut-off where any pixel with a brightness of below a certain cut-off is considered 0 (acellular) and any number above said cut-off is considerred 1 (cellular). The exact cut-off chosen needs to balance being high enough to include dark cellular area (fairly smooth cells), whilst removing as much noise as possible.
 
 ```{r}
-#| include: FALSE
+#| include: false
+error_factor <- 1.5
 source("01c_cut_off.r")
 ```
 Fig.8a: Image after cut-off applied
@@ -160,8 +163,29 @@ Fig.8b: Removed artifacts of noise from image
 plot(m_bf_segmented)
 ```
 
-This is the final processed image 
+Fig.8b is the final processed image, however if we overlay the outline of the image over the original image (see Fig.8c), you will notice there is a slight halo effect. This will lead to a slight overestimation of cellularity.
 
+Fig.8b: outline of segmented image over original
+```{r}
+plot(m_bf_overlay) 
+```
+
+In order to mitigate against this overestimation, we subtracted a function of the total edges of the segmented area from the total cellular area. We used a function of the segmented area edge since the overestimation occurs at the cellular-acellular border. Therefore, an image with lots of cellular-acellular borders (like in the example image we have used throughout this report) will have more error due to this overestimation than an image where all the cells are clumped together on one side, which in turn will have more error than an image which is completely full or devoid of cells.
+
+Once we have the total cellular area, we take the sum of the pixel values in the segmented image (where cellular pixels have the value 1 and acellular pixels have the value 0), and then divide this by the total number of pixels in the image to get the proportion of cellular area and times by 100 to get the percentage, i.e. cellularity.
+
+For this image:
+```{r}
+cat("Cellularity is", round(computer_cellularity, 1),"%\n")
+```
+
+#### Gradient descent and gridsearch
+
+In this algorithm there are three main variables that 
+
+### Limitations
+
+Some objects (e.g. bubbles) appear like cells and hence are counted as cellular area. Fortunatly, most bubbles are relatively large if they do exist, meaning that the blurring that we apply is not sufficient to cover the whole bubble. However, this does still sometimes cause cellularity to be slightly overestimated although the effect of this is largely minimal on the end cellularity.
 
 ### Other techniques considered and tested
 

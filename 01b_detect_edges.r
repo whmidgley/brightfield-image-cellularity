@@ -17,7 +17,7 @@ hfilt <- matrix(c(1, 2, 1, 0, 0, 0, -1, -2, -1), nrow = 3) # sobel
 
 # rotate horizontal filter to obtain vertical filter
 vfilt <- t(hfilt)
-
+ 
 # get horizontal and vertical edges
 imgH <- filter2(img[,,1], hfilt, boundary="replicate")
 imgV <- filter2(img[,,1], vfilt, boundary="replicate")
@@ -39,6 +39,7 @@ xb <- (xb - min(xb)) / (max(xb) - min(xb))
 plot(xb)
 
 if (mean(xb) < 0.3 && sd(xb) > 0.05) {
+  cat("Smooth image, cutting top end...")
   xb <- case_when(xb > 0.6 ~ 0.6, TRUE ~ matrix(xb))
   xb <- (xb - min(xb)) / (max(xb) - min(xb))
   xb <- Image(matrix(xb, ncol = ncol(img)))
