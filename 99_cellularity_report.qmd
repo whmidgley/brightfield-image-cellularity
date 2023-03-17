@@ -1,5 +1,5 @@
 ---
-title: "Calculating cellularity report"
+title: "Report: Automation of cellularity calculation"
 author: "William Midgley & Arron Lacey"
 date: Sys.Date()
 format: 
@@ -7,6 +7,56 @@ format:
     code-fold: true
 ---
 
+*See github page for code:* <https://github.com/whmidgley/cell-analysis>
+
 ## Introduction
 
- 
+Cellularity is a measure of general cell population. This is measured as the percentage of a brightfield image that is covered by cells (Application of this measure is covered in "Image Analysis Overview").
+
+### Current method
+
+Currently, images are taken using the brightfield microscope and ported into the proprietory image analysis software "Leica LAS AF", from which a researcher would look at each image and circle all cellular area (or acellular area depending on which is bigger) using a polygon tool within leica (fig.1). These polygons are saved as a (leica) .roi file which can then be used to only look at the pixels circled. This is done by creating a .csv file with a chart of all possible greyscale pixel brightnesses (0-255), and for each roi (circled area), the number of pixels with each given brightness is listed. The final cellularity is calculated by summing of all pixels in this chart and dividing by the total pixel number of the image. If acellular area is circled, the resulating proportion is taken from 1 to find the cellular area. This is done using excel functions. Furthermore, it is not possible to separate the two channels (gfp and brightfield) in this chart using this software, but since the rois overlay both channels, the cellularity is simply divided by 2.
+
+![fig.1: Example image with cellular area circled](Example roi image.png)
+
+![Example pixel chart. Leftmost column shows pixel brightness, every two columns after represents a roi](Example chart 0.png)
+
+## Automation
+
+This process is extremely time consuming and for hundreds of images can take months. Furthermore, humans are prone to overestimate cellular area since small gaps in cells can often be missed, as well as general human error.
+Table 1 shows the cellularities of a sample of images that were calculated by two different researchers. The two different researchers produced very similar but distinctly different results.
+This helps demonstrate the uncertainty of cellularity calculated by a human. This will provide a useful baseline for comparison when testing accuracy of cellularity calculated automatically.
+
+*insert table 1*
+
+### Automating human calculated cellularities
+
+In order to validate any algorithm that calculates cellularity, it must be compared to a number of human calculated cellularities on a wide range of images due to the number of artifacts and varying noise on brightfield images.
+Since it would take a great deal of time to calculate the cellularities from the pixel charts for all validation images, we wrote a script in the programming language R that takes each chart and calculates cellularity from it outputting a .csv file of cellularities from all human image roi reports provided. This script can handle both cellular and acellular charts by using the naming conventions (ROI-cellular) and (ROI-acellular) in the file names.
+
+### Automated cellularity algorithm
+
+The next step is to perform image processing:
+
+#### Normalisation
+
+These images often have gradients of light to dark over the image (fig.2) 
+
+![fig.2: Example image with large gradient](Example gradient image.png)
+
+```{r}
+m_bf <- suppressWarnings(readImage("report/bf_example.tif"))
+
+plot(m_bf)
+
+source("01a_remove_gradient.r")
+
+plot(m_bf_normal)
+
+```
+
+### Other techniques considered and tested
+
+dl, kmeans...
+
+try non-linear regression for normalisation

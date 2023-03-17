@@ -30,9 +30,21 @@ edata <- sqrt((hdata/2)^2 + (vdata*2)^2)
 # transform edge data to image
 imgE <- Image(edata)
 
+plot(imgE)
 # Low pass filter with gblur
-  xb <- gblur(imgE, 2)
-  plot(xb)
+xb <- gblur(imgE, 1.464)
+
+xb <- (xb - min(xb)) / (max(xb) - min(xb))
+
+plot(xb)
+
+if (mean(xb) < 0.3 && sd(xb) > 0.05) {
+  xb <- case_when(xb > 0.6 ~ 0.6, TRUE ~ matrix(xb))
+  xb <- (xb - min(xb)) / (max(xb) - min(xb))
+  xb <- Image(matrix(xb, ncol = ncol(img)))
+}
+
+plot(xb)
 
 m_bf_blur <- xb
 save(m_bf_blur, file ="r-objects/m_bf_blur.RData")
