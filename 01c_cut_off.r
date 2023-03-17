@@ -37,7 +37,7 @@ imgV <- filter2(xe, vfilt, boundary="replicate")
 # combine edge pixel data to get overall edge data
 hdata <- imageData(imgH)
 vdata <- imageData(imgV)
-edata <- sqrt((hdata/2)^2 + (vdata*2)^2)
+edata <- sqrt((hdata)^2 + (vdata)^2)
 
 # transform edge data to image
 imgE <- Image(edata)
