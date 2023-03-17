@@ -80,6 +80,7 @@ if (length(images) != length(reports)) warning("No. images does not equal no. re
 
 auto_cellularities <- data.frame(matrix(ncol = 2, nrow = length(image_names)))
 colnames(auto_cellularities) <- c("name", "cellularity")
+error_factor <- 1.5
 
 for (j in 1:length(images)) {
 	cat("Image",j,"=================\n")

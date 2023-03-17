@@ -39,7 +39,7 @@ xb <- (xb - min(xb)) / (max(xb) - min(xb))
 plot(xb)
 
 if (mean(xb) < 0.3 && sd(xb) > 0.05) {
-  cat("Smooth image, cutting top end...")
+  cat("Smooth image, cutting top end...\n")
   xb <- case_when(xb > 0.6 ~ 0.6, TRUE ~ matrix(xb))
   xb <- (xb - min(xb)) / (max(xb) - min(xb))
   xb <- Image(matrix(xb, ncol = ncol(img)))
