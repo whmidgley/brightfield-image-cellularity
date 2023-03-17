@@ -155,10 +155,12 @@ plot(m_bf_cut_off)
 
 As you can see in Fig.8a, despite cellular area being well defined, there are small spots of noise remaining. Since these are all smaller than the size of an individual cell, we can simply remove these based on their size, producing Fig.8b.
 
-Fig.8b: Removed artifacts of noise
+Fig.8b: Removed artifacts of noise from image
 ```{r}
 plot(m_bf_segmented)
 ```
+
+This is the final processed image 
 
 
 ### Other techniques considered and tested
