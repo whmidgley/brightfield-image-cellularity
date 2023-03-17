@@ -62,12 +62,13 @@ computer_cellularity <- ((1-prop_background)-(1-prop_background_edge)*error_fact
 cat("cellularity is", round(computer_cellularity),"% as defined by the computer\n")
 
 m_bf_overlay <- array(dim = dim(m_bf))
-m_bf_overlay[,,2:3] <- m_bf[,,2:3]
-m_bf_overlay[,,1] <- m_bf_edges
+m_bf_overlay <- m_bf
+m_bf_overlay[,,1] <- m_bf[,,1] + m_bf_edges
+m_bf_overlay[m_bf_overlay > 1] <- 1
 
 m_bf_overlay <- Image(m_bf_overlay, colormode = "Color")
 
-grid.raster(m_bf_overlay)
+plot(m_bf_overlay)
 
 writeImage(xe, paste0("segmented/", sub('.+/(.+)', '\\1', images[j]) %>% str_replace_all(".tif", "_segmented.tif")))
 
