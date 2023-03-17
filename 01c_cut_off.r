@@ -70,6 +70,8 @@ m_bf_overlay <- Image(m_bf_overlay, colormode = "Color")
 
 plot(m_bf_overlay)
 
+if(exists("images")) {
 writeImage(xe, paste0("segmented/", sub('.+/(.+)', '\\1', images[j]) %>% str_replace_all(".tif", "_segmented.tif")))
 
 writeImage(xe, paste0("overlay/", sub('.+/(.+)', '\\1', images[j]) %>% str_replace_all(".tif", "_overlay.tif")))
+}

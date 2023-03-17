@@ -1,0 +1,194 @@
+---
+title: "Report: Automation of cellularity calculation"
+author: "William Midgley & Arron Lacey"
+date: today
+format: 
+  html:
+    code-fold: TRUE
+    code-tools: TRUE
+---
+```{r}
+#| include: false
+
+setwd("C:\\Users\\william.midgley\\Documents\\Personal development\\Amy's PhD\\cell-analysis")
+library(tidyverse)
+library(knitr)
+library(EBImage)
+library(plot3D)
+
+options(knitr.kable.NA = '')
+```
+*See github page for code:* <https://github.com/whmidgley/cell-analysis>
+
+## Introduction
+
+Cellularity is a measure of general cell population. This is measured as the percentage of a brightfield image that is covered by cells (Application of this measure is covered in "Image Analysis Overview").
+
+### Current method
+
+Currently, images are taken using the brightfield microscope and ported into the proprietory image analysis software "Leica LAS AF", from which a researcher would look at each image and circle all cellular area (or acellular area depending on which is bigger) using a polygon tool within leica (fig.1). These polygons are saved as a (leica) .roi file which can then be used to only look at the pixels circled. This is done by creating a .csv file with a chart of all possible greyscale pixel brightnesses (0-255), and for each roi (circled area), the number of pixels with each given brightness is listed. The final cellularity is calculated by summing of all pixels in this chart and dividing by the total pixel number of the image. If acellular area is circled, the resulating proportion is taken from 1 to find the cellular area. This is done using excel functions. Furthermore, it is not possible to separate the two channels (gfp and brightfield) in this chart using this software, but since the rois overlay both channels, the cellularity is simply divided by 2.
+
+![Fig.1: Example image with cellular area circled](report/Example roi image.png)
+
+![Fig.2: Example pixel chart. Leftmost column shows pixel brightness, every two columns after represents a roi](report/Example chart 0.png)
+
+## Automation
+
+This process is extremely time consuming and for hundreds of images can take months. Furthermore, humans are prone to overestimate cellular area since small gaps in cells can often be missed, as well as general human error.
+Table 1 shows the cellularities of a sample of images that were calculated by two different researchers. The two different researchers produced very similar but distinctly different results.
+This helps demonstrate the uncertainty of cellularity calculated by a human. This will provide a useful baseline for comparison when testing accuracy of cellularity calculated automatically.
+
+*insert table 1*
+
+### Automating human calculated cellularities
+
+In order to validate any algorithm that calculates cellularity, it must be compared to a number of human calculated cellularities on a wide range of images due to the number of artifacts and varying noise on brightfield images.
+Since it would take a great deal of time to calculate the cellularities from the pixel charts for all validation images, we wrote a script in the programming language R that takes each chart and calculates cellularity from it outputting a .csv file of cellularities from all human image roi reports provided. This script can handle both cellular and acellular charts by using the naming conventions (ROI-cellular) and (ROI-acellular) in the file names.
+
+### Automated cellularity algorithm
+
+The next step is to perform image processing:
+
+#### Image normalisation
+
+These images often have gradients of light to dark over the image (fig.3). Therefore, we performed 3D linear regression over the image to find the general trend of brightness, and then we subtracted this gradient, and added 0.5 from the image to normalise it.
+
+Fig.3: Original image:
+```{r}
+m_bf <- suppressWarnings(readImage("report/bf_example.tif"))
+
+plot(m_bf)
+```
+
+Fig.4: 3D plot of image:
+
+```{r}
+persp3D(z = t(m_bf[,,1]), xlab = "right", ylab = "bottom", zlab = "brightness", theta = 120, phi = 40)
+
+```
+
+Fig.5a: 3D plane
+```{r}
+invisible(capture.output(source("01a_remove_gradient.r")))
+m_bf_normal <- Image(m_bf_normal[,,1])
+
+d_normal <- data.frame(matrix(t(m_bf[,,1]), ncol=1))
+
+  d_normal <-
+  expand.grid(1:nrow(m_bf[,,1]), 1:ncol(m_bf[,,1])) %>%
+  data.frame() %>%
+  cbind(d_normal)
+
+  colnames(d_normal) <- c("x", "y", "z")
+
+  fit_normal <- lm(z ~ x + y, data = d_normal)
+
+  if (is.na(fit_normal$coefficients[1])) {
+    fit_normal$coefficients[1] <- 0
+  }
+
+  if (is.na(fit_normal$coefficients[2])) {
+    fit_normal$coefficients[2] <- 0
+  }
+
+  if (is.na(fit_normal$coefficients[3])) {
+    fit_normal$coefficients[3] <- 0
+  }
+
+  plane_normal <- outer(rows,cols,fit_normal,FUN=fun)
+
+persp3D(z = plane_normal, xlab = "right", ylab = "bottom", zlab = "brightness", theta = 120, phi = 40)
+```
+Fig.5b: Plane as image
+```{r}
+plot(Image(plane_normal))
+```
+
+Fig.6a: Normalised image
+```{r}
+plot(m_bf_normal)
+
+```
+Sometimes, this doesn't remove all gradients as there can be overlapping gradients. Therefore we performed this normalisation process three times per image.
+
+#### Edge detection and blurring
+
+We then used a sobel edge detector kernel (see below) to detect the edges of the image (Fig.7a)
+
+```{r}
+#| include: false
+source("01b_detect_edges.r")
+```
+```{r}
+cat("Table: Vertical sobel kernel")
+print(hfilt)
+cat("Table: Horizontal sobel kernel")
+print(vfilt)
+```
+
+These images all have horizontal artifacts running accross the images. Therefore, to help reduce the interferrence of these, we weighted the horizontal edges twice as much as the vertical edges, thereby keeping cell edges intact, but reducing the effect of the horizontal artifacts.
+
+Fig.7a: Image edges
+```{r}
+plot(imgE)
+```
+
+We then used a gaussian blur to blur the edges (Fig.7b). This helps join the cell edges together to form a cellular region. The amount of blur was important since we wanted to ensure that the centres of the cells are filled, whilst reducing the expansion of cellular area due to blurring as much as possible.
+
+Fig.7b: Blurred edge detected image
+```{r}
+plot(xb)
+```
+
+There is great variation within these images. Some images have very distinct cellular versus acellular regions, whereas on some images, it is hard to distinguish between the two. Therefore, on particularly smooth images (those with a low average brightness after edge detection *check this*), we brightened the image by cutting off the brightest pixels and normalising the rest of the pixels back to 0-1 to help increase detection of cells.
+
+#### Applying a cut off
+
+At this point, cellular area (which has a lot of edges in) is generally bright and acellular area (which is more smooth) is generally dark. Therefore, we applied a cut-off where any pixel with a brightness of below a certain cut-off is considered 0 (acellular) and any number above said cut-off is considerred 1 (cellular). The exact cut-off chosen needs to balance being high enough to include dark cellular area (fairly smooth cells), whilst removing as much noise as possible.
+
+```{r}
+#| include: false
+error_factor <- 1.5
+source("01c_cut_off.r")
+```
+Fig.8a: Image after cut-off applied
+```{r}
+plot(m_bf_cut_off)
+```
+
+As you can see in Fig.8a, despite cellular area being well defined, there are small spots of noise remaining. Since these are all smaller than the size of an individual cell, we can simply remove these based on their size, producing Fig.8b.
+
+Fig.8b: Removed artifacts of noise from image
+```{r}
+plot(m_bf_segmented)
+```
+
+Fig.8b is the final processed image, however if we overlay the outline of the image over the original image (see Fig.8c), you will notice there is a slight halo effect. This will lead to a slight overestimation of cellularity.
+
+Fig.8b: outline of segmented image over original
+```{r}
+plot(m_bf_overlay) 
+```
+
+In order to mitigate against this overestimation, we subtracted a function of the total edges of the segmented area from the total cellular area. We used a function of the segmented area edge since the overestimation occurs at the cellular-acellular border. Therefore, an image with lots of cellular-acellular borders (like in the example image we have used throughout this report) will have more error due to this overestimation than an image where all the cells are clumped together on one side, which in turn will have more error than an image which is completely full or devoid of cells.
+
+Once we have the total cellular area, we take the sum of the pixel values in the segmented image (where cellular pixels have the value 1 and acellular pixels have the value 0), and then divide this by the total number of pixels in the image to get the proportion of cellular area and times by 100 to get the percentage, i.e. cellularity.
+
+For this image:
+```{r}
+cat("Cellularity is", round(computer_cellularity, 1),"%\n")
+```
+
+#### Gradient descent and gridsearch
+
+In this algorithm there are three main variables that 
+
+### Limitations
+
+Some objects (e.g. bubbles) appear like cells and hence are counted as cellular area. Fortunatly, most bubbles are relatively large if they do exist, meaning that the blurring that we apply is not sufficient to cover the whole bubble. However, this does still sometimes cause cellularity to be slightly overestimated although the effect of this is largely minimal on the end cellularity.
+
+### Other techniques considered and tested
+
+dl, kmeans...
+
+try non-linear regression for normalisation
