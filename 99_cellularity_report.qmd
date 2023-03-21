@@ -18,7 +18,11 @@ library(plot3D)
 
 options(knitr.kable.NA = '')
 ```
-*See github page for code:* <https://github.com/whmidgley/cell-analysis>
+*See github and kaggle pages for code:*
+
+<https://github.com/whmidgley/cell-analysis>
+<https://www.kaggle.com/code/williammidgley/deep-learning-cellularity>
+<https://www.kaggle.com/code/williammidgley/grid-search-cellularity>
 
 ## Introduction
 
@@ -113,7 +117,7 @@ Sometimes, this doesn't remove all gradients as there can be overlapping gradien
 
 #### Edge detection and blurring
 
-We then used a sobel edge detector kernel (see below) to detect the edges of the image (Fig.7a)
+We then used a sobel edge detector kernel (see below) to detect the edges of the image (Fig.7a). We used sobel since it is more computationally efficient and edge precision isn't absolutely necessary for this project
 
 ```{r}
 #| include: false
@@ -181,14 +185,26 @@ cat("Cellularity is", round(computer_cellularity, 1),"%\n")
 
 #### Gradient descent and gridsearch
 
-In this algorithm there are three main variables that 
+In this algorithm there are three main variables that affect the accuracy of the model: blur, cut-off, and error factor (i.e. the proportion of the segmented image edges that we subtract from the segmented cellular area. 
 
 ### Limitations
 
-Some objects (e.g. bubbles) appear like cells and hence are counted as cellular area. Fortunatly, most bubbles are relatively large if they do exist, meaning that the blurring that we apply is not sufficient to cover the whole bubble. However, this does still sometimes cause cellularity to be slightly overestimated although the effect of this is largely minimal on the end cellularity.
+Some objects (e.g. bubbles or imaging artifacts) are sometimes counted as cellular area. Fortunatly, most bubbles are relatively large if they do exist, meaning that the blurring that we apply is not sufficient to cover the whole bubble. However, this does still sometimes cause cellularity to be slightly overestimated although the effect of this is largely minimal on the end cellularity.
 
 ### Other techniques considered and tested
 
-dl, kmeans...
+#### K-means clustering
 
-try non-linear regression for normalisation
+The first method we tried was using k-means clustering which is an unsupervised learning technique which takes all the different colours of an image (or shades in this case) and groups them into a given number of clusters.
+Using k-means before edge detection worked to a certian extent, however, similar shades occur both in cellular and acellular area.
+The major difference between cellular and acellualr area from an image processing perspective is that acellular area is consistant (usually - I have discussed the background noise in the edge detection section) wheras cellular area has many edges. Each cell has a dark outer ring and a bright centre. Therefore, we decided to apply edge detection. We then applied blurring for reasons previously explained.
+From here, we used k-means clustering on the blurred, edge detected image and took the area of the darkest cluster. This worked as a good start, but it makes the assumption that there is enough dark (acellular) area in the image that it will form its own cluster. For images with a high cellularity, the darkest cluster is still cellular area.
+From there we clustered the images into clusters determined by a representitative sample. However, since we are using consistent clusters, and we're only interested in the darkest cluster, this is indistinguishable from a simple cut-off. Therefore we used the cut-off as a less computationally intensive alternative.
+
+#### Deep learning
+
+We also attempted using convolutional neural networks (CNNs) to calculate cellularity. We used the human calculated cellularities (outcome variable) and their respective images (predictor variable) as the training dataset. We attempted using a linear activation function and a sigmoid activation function where cellularity is on a scale of 0-1. Because of our very small dataset for CNNs (~100 images), our model could not attain a competitive accuracy. In order to mitigate against this, we used transfer learning and image augmentation to increase accuracy. This made the model much more competitive, achieving a mean error of 3-4%, however this is still less accurate than the edge detection method.
+
+There is portential for the use of deep learning, however with the size of the training datasets available to us it is unlikely to significantly improve on the edge detection approach. Furthermore, using the edge detection approch, we are able to validate the outputs of the algorithm by simply looking at the segmented image. This contrasts the CNN method where there is only one cellularity output with no segmented image. One way to combat this is to train the model on segmented images as opposed to raw cellularities. The reason we did not follow this approach is because there are no leica .roi reader packages. We attempted parsing the files but could not find a suitable method.
+
+try non-linear regression for normalisation???
