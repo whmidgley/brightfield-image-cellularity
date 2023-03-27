@@ -10,7 +10,7 @@ m_bf_blur <- m_bf_blur/max(m_bf_blur)
 d_bf_blur <- data.frame(matrix(m_bf_blur, ncol=1))
 
 d_bf_cut_off <- case_when(
-	d_bf_blur < 0.07 ~ 0,
+	d_bf_blur < cut_off ~ 0,
 	TRUE ~ 1)
 
 m_bf_cut_off <- Image(matrix(d_bf_cut_off, ncol = ncol(m_bf_blur)))
@@ -63,10 +63,10 @@ cat("cellularity is", round(computer_cellularity),"% as defined by the computer\
 
 m_bf_overlay <- array(dim = dim(m_bf))
 m_bf_overlay <- m_bf
-m_bf_overlay[,,1] <- m_bf[,,1] + m_bf_edges
-m_bf_overlay[m_bf_overlay > 1] <- 1
 
-m_bf_overlay <- Image(m_bf_overlay, colormode = "Color")
+m_bf_overlay[,,1][m_bf_edges == 1] <- 1
+m_bf_overlay[,,2][m_bf_edges == 1] <- 0
+m_bf_overlay[,,3][m_bf_edges == 1] <- 0
 
 plot(m_bf_overlay)
 

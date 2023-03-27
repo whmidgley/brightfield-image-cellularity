@@ -32,7 +32,7 @@ imgE <- Image(edata)
 
 plot(imgE)
 # Low pass filter with gblur
-xb <- gblur(imgE, 1.464)
+xb <- gblur(imgE, blur)
 
 xb <- (xb - min(xb)) / (max(xb) - min(xb))
 
@@ -45,7 +45,8 @@ if (mean(xb) < 0.3 && sd(xb) > 0.05) {
   xb <- Image(matrix(xb, ncol = ncol(img)))
 }
 
-plot(xb)
-
 m_bf_blur <- xb
+
+plot(m_bf_blur)
+
 save(m_bf_blur, file ="r-objects/m_bf_blur.RData")

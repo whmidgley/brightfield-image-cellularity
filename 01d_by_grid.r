@@ -1,5 +1,4 @@
 
-grid_no <- 4
 
 if (nrow(m_bf_segmented) %% grid_no != 0) {
 	warning("Number of edge segments is not a factor of the edge length of image.\nResizing image accordingly...\n")

@@ -56,6 +56,18 @@ for (pkg in pkgs) {
 options(repr.plot.width = 15, repr.plot.height = 20)
 
 # ==========================================================================
+# Variables
+# ==========================================================================
+
+blur <- 1.464
+
+cut_off <- 0.07
+
+error_factor <- 1.5
+
+grid_no <- 4
+
+# ==========================================================================
 # Load images
 # ==========================================================================
 
@@ -80,7 +92,7 @@ if (length(images) != length(reports)) warning("No. images does not equal no. re
 
 auto_cellularities <- data.frame(matrix(ncol = 2, nrow = length(image_names)))
 colnames(auto_cellularities) <- c("name", "cellularity")
-error_factor <- 1.5
+
 
 for (j in 1:length(images)) {
 	cat("Image",j,"=================\n")
@@ -89,6 +101,7 @@ for (j in 1:length(images)) {
 source("01a_remove_gradient.r")
 source("01b_detect_edges.r")
 source("01c_cut_off.r")
+source("01d_by_grid.r")
 
 auto_cellularities[j,] <- c(image_names[j], print(computer_cellularity))
 }
