@@ -10,19 +10,31 @@ format:
 ```{r}
 #| include: false
 
-setwd("C:\\Users\\william.midgley\\Documents\\Personal development\\Amy's PhD\\cell-analysis")
+setwd("C:\\Users\\william.midgley\\OneDrive - Swansea University\\Documents\\projects\\Amy's PhD\\cell-analysis")
 library(tidyverse)
+library(stringr)
 library(knitr)
 library(EBImage)
 library(plot3D)
 
 options(knitr.kable.NA = '')
+
+
+blur <- 1.464
+
+cut_off <- 0.07
+
+error_factor <- 1.5
+
+grid_no <- 4
 ```
 *See github and kaggle pages for code:*
 
-<https://github.com/whmidgley/cell-analysis>
-<https://www.kaggle.com/code/williammidgley/deep-learning-cellularity>
-<https://www.kaggle.com/code/williammidgley/grid-search-cellularity>
+- <https://github.com/whmidgley/cell-analysis>
+- <https://www.kaggle.com/code/williammidgley/deep-learning-cellularity>
+- <https://www.kaggle.com/code/williammidgley/grid-search-cellularity>
+
+*These have not yet been made public*
 
 ## Introduction
 
@@ -39,10 +51,24 @@ Currently, images are taken using the brightfield microscope and ported into the
 ## Automation
 
 This process is extremely time consuming and for hundreds of images can take months. Furthermore, humans are prone to overestimate cellular area since small gaps in cells can often be missed, as well as general human error.
-Table 1 shows the cellularities of a sample of images that were calculated by two different researchers. The two different researchers produced very similar but distinctly different results.
+Fig.3 comapres the cellularities of a sample of images that were calculated by two different researchers (Gail and Amy). The two different researchers produced very similar but distinctly different results. The red line represents x=y where the cellularities are the same.
 This helps demonstrate the uncertainty of cellularity calculated by a human. This will provide a useful baseline for comparison when testing accuracy of cellularity calculated automatically.
 
-*insert table 1*
+```{r}
+gail_cells <- read.csv("gail_cellularities.csv")
+amy_cells <- read.csv("amy_cellularities.csv")
+gva <- cbind(gail_cells, amy_cells)
+
+
+ggplot(data = gva) +
+  aes(x = gail_cells, y = amy_cells) +
+  geom_point() +
+  geom_abline(slope = 1, intercept = 0, colour = "red") +
+  ggtitle("Scatter plot comparing Amy's and Gail's cellularities") +
+  xlab("Gail's cellularities (%)") +
+  ylab("Amy's cellularities (%)")
+```
+Fig.3: a scatter plot comparing Amy's and Gail's cellularities
 
 ### Automating human calculated cellularities
 
@@ -57,21 +83,21 @@ The next step is to perform image processing:
 
 These images often have gradients of light to dark over the image (fig.3). Therefore, we performed 3D linear regression over the image to find the general trend of brightness, and then we subtracted this gradient, and added 0.5 from the image to normalise it.
 
-Fig.3: Original image:
+Fig.4: Original image:
 ```{r}
 m_bf <- suppressWarnings(readImage("report/bf_example.tif"))
 
 plot(m_bf)
 ```
 
-Fig.4: 3D plot of image:
+Fig.5: 3D plot of image:
 
 ```{r}
 persp3D(z = t(m_bf[,,1]), xlab = "right", ylab = "bottom", zlab = "brightness", theta = 120, phi = 40)
 
 ```
 
-Fig.5a: 3D plane
+Fig.6a: 3D plane
 ```{r}
 invisible(capture.output(source("01a_remove_gradient.r")))
 m_bf_normal <- Image(m_bf_normal[,,1])
@@ -103,12 +129,12 @@ d_normal <- data.frame(matrix(t(m_bf[,,1]), ncol=1))
 
 persp3D(z = plane_normal, xlab = "right", ylab = "bottom", zlab = "brightness", theta = 120, phi = 40)
 ```
-Fig.5b: Plane as image
+Fig.6b: Plane as image
 ```{r}
 plot(Image(plane_normal))
 ```
 
-Fig.6a: Normalised image
+Fig.7: Normalised image
 ```{r}
 plot(m_bf_normal)
 
@@ -117,7 +143,7 @@ Sometimes, this doesn't remove all gradients as there can be overlapping gradien
 
 #### Edge detection and blurring
 
-We then used a sobel edge detector kernel (see below) to detect the edges of the image (Fig.7a). We used sobel since it is more computationally efficient and edge precision isn't absolutely necessary for this project
+We then used a sobel edge detector kernel (see below) to detect the edges of the image (Fig.8a). We used sobel since it is more computationally efficient and edge precision isn't absolutely necessary for this project
 
 ```{r}
 #| include: false
@@ -132,19 +158,19 @@ print(vfilt)
 
 These images all have horizontal artifacts running accross the images. Therefore, to help reduce the interferrence of these, we weighted the horizontal edges twice as much as the vertical edges, thereby keeping cell edges intact, but reducing the effect of the horizontal artifacts.
 
-Fig.7a: Image edges
+Fig.8a: Image edges
 ```{r}
 plot(imgE)
 ```
 
-We then used a gaussian blur to blur the edges (Fig.7b). This helps join the cell edges together to form a cellular region. The amount of blur was important since we wanted to ensure that the centres of the cells are filled, whilst reducing the expansion of cellular area due to blurring as much as possible.
+We then used a gaussian blur to blur the edges (Fig.8b). This helps join the cell edges together to form a cellular region. The amount of blur was important since we wanted to ensure that the centres of the cells are filled, whilst reducing the expansion of cellular area due to blurring as much as possible.
 
-Fig.7b: Blurred edge detected image
+Fig.8b: Blurred edge detected image
 ```{r}
 plot(xb)
 ```
 
-There is great variation within these images. Some images have very distinct cellular versus acellular regions, whereas on some images, it is hard to distinguish between the two. Therefore, on particularly smooth images (those with a low average brightness after edge detection *check this*), we brightened the image by cutting off the brightest pixels and normalising the rest of the pixels back to 0-1 to help increase detection of cells.
+There is great variation within these images. Some images have very distinct cellular versus acellular regions, whereas on some images, it is hard to distinguish between the two. Therefore, we brightened the images by cutting off the brightest pixels and normalising the rest of the pixels back to 0-1 to help increase detection of cells. We only did this until the cellular area (which we could mostly tell from a cutoff) had a mean brightness of 0.3.
 
 #### Applying a cut off
 
@@ -152,24 +178,23 @@ At this point, cellular area (which has a lot of edges in) is generally bright a
 
 ```{r}
 #| include: false
-error_factor <- 1.5
 source("01c_cut_off.r")
 ```
-Fig.8a: Image after cut-off applied
+Fig.9a: Image after cut-off applied
 ```{r}
 plot(m_bf_cut_off)
 ```
 
-As you can see in Fig.8a, despite cellular area being well defined, there are small spots of noise remaining. Since these are all smaller than the size of an individual cell, we can simply remove these based on their size, producing Fig.8b.
+As you can see in Fig.9a, despite cellular area being well defined, there are small spots of noise remaining. Since these are all smaller than the size of an individual cell, we can simply remove these based on their size, producing Fig.9b.
 
-Fig.8b: Removed artifacts of noise from image
+Fig.9b: Removed artifacts of noise from image
 ```{r}
 plot(m_bf_segmented)
 ```
 
-Fig.8b is the final processed image, however if we overlay the outline of the image over the original image (see Fig.8c), you will notice there is a slight halo effect. This will lead to a slight overestimation of cellularity.
+Fig.9b is the final processed image, however if we overlay the outline of the image over the original image (see Fig.9c), you will notice there is a slight halo effect. This will lead to a slight overestimation of cellularity.
 
-Fig.8b: outline of segmented image over original
+Fig.9c: outline of segmented image over original
 ```{r}
 plot(m_bf_overlay) 
 ```
@@ -182,6 +207,104 @@ For this image:
 ```{r}
 cat("Cellularity is", round(computer_cellularity, 1),"%\n")
 ```
+
+#### Applying a grid
+
+It is useful to be able to calculate cellularities on certain sections of the images in a grid. Therefore we wrote a script that also gives cellularities in a grid of a size of the researcher's choice. In this example we have set it to a 4x4 grid.
+
+```{r}
+#| include: false
+source("01d_by_grid.r")
+```
+```{r}
+kable(m_cellularity_grid, col.names = NULL)
+```
+Table 1: A table showing the cellularities of a 4x4 grid over the example image
+
+```{r}
+plot(m_bf_overlay_grid)
+```
+Fig.10: Image with grid over it
+
+### Validation
+
+Table 2 shows the mean error, mean absolute error, and the mean squared error by comparing the automated cellularities to the human calculated ones 
+
+Fig.10a is a scatterplot plotting human cellularities against automated cellularities. The red y=x straight line represents a perfect algorithm (assuming human cellularities are correct).
+Fig.10b shows the variation in human calculated cellularities by plotting cellularities calculated by a different researcher, Gail, against Amy's cellularities and automated cellularities (similar to Fig.1 but including automated results). This shows that the variation between humans isn't that different to the variation between automation and humans.
+
+Table 3 shows the mean error, mean absolute error, and the mean squared error of Amy's cellularities compared to Gail's cellularities. 
+
+```{r}
+auto_cells <- read.csv("automated_cellularities.csv")
+human_cells <- read.csv("human_cellularities_fixed.csv")
+auto_cells$name <- str_replace(auto_cells$name, "Effectene.lif_", "") %>%
+  str_replace(".lif_", " ") %>%
+  str_replace("Snapshot1.tif", "")
+human_cells <- human_cells[,c(1,2)]
+
+cells <- inner_join(auto_cells, human_cells, by = c("name" = "human_name"))
+cells <- cells %>% mutate(
+  error = cellularity - human_cellularity,
+  )
+
+tribble(~"mean error", ~"mean absolute error", ~"mean squared error",
+  paste0(round(mean(cells$error), 2), "%"), paste0(round(mean(abs(cells$error)), 2), "%"), paste0(round(mean(cells$error^2), 2), "sq%")
+  ) %>% kable()
+```
+Table 2: table showing mean error, mean absolute error, and the mean squared error of automated cellularities compared to human calculated cellularities
+
+```{r}
+
+ggplot(data = cells) +
+  aes(x = human_cellularity, y = cellularity) +
+  geom_point() +
+  geom_abline(slope = 1, intercept = 0, colour = "red") +
+  ggtitle("Scatter plot of human cellularities against automated cellularities") +
+  xlab("human cellularities (%)") +
+  ylab("automated cellularities (%)")
+
+```
+Fig.10a: plot of automated cellularities against human cellularities. Red line is x=y
+
+```{r}
+gail_auto_cells <- auto_cells[str_detect(auto_cells$name, "(20190531)|(20191114)"),]
+gail_auto_cells <- cbind(gail_auto_cells[,2], "Automated")
+amy_cells <- cbind(amy_cells, "Amy")
+colnames(gail_auto_cells) <- c("cellularity", "auto_v_human")
+colnames(amy_cells) <- c("cellularity", "auto_v_human")
+colnames(gail_cells) <- "gail_cellularity"
+gail_test <- cbind(rbind(gail_cells, gail_cells), rbind(gail_auto_cells, amy_cells))
+
+
+ggplot(data = gail_test) +
+  aes(x = gail_cellularity, y = as.numeric(cellularity), colour = auto_v_human) +
+  geom_point() +
+  geom_abline(slope = 1, intercept = 0) +
+  ggtitle("Scatter plot comparing Amy's and automated cellularities against Gail's") +
+  xlab("Gail's cellularities (%)") +
+  ylab("Amy's and automated cellularities (%)") +
+  scale_colour_discrete(name = "")
+
+```
+Fig.10b: plot of Gail's cellularities against Amy's cellularities and automated cellularities. Black line is x=y
+
+```{r}
+amy_error <- cbind(gail_cells, amy_cells[,1])
+colnames(amy_error) <- c("gail", "amy")
+amy_error$error <- amy_error$amy - amy_error$gail
+
+auto_error <- cbind(gail_cells, as.numeric(gail_auto_cells[,1]))
+colnames(auto_error) <- c("gail", "auto")
+auto_error$error <- auto_error$auto - auto_error$gail
+
+
+tribble(~"Cellularity", ~"mean error", ~"mean absolute error", ~"mean squared error",
+  "Amy", paste0(round(mean(amy_error$error), 2), "%"), paste0(round(mean(abs(amy_error$error)), 2), "%"), paste0(round(mean(amy_error$error^2), 2), "sq%"),
+  "Automated", paste0(round(mean(auto_error$error), 2), "%"), paste0(round(mean(abs(auto_error$error)), 2), "%"), paste0(round(mean(auto_error$error^2), 2), "sq%")
+  ) %>% kable()
+```
+Table 3: table showing the mean error, mean absolute error, and the mean squared error of Amy's and automated cellularities compared to Gail's cellularities
 
 #### Gradient descent and gridsearch
 
@@ -207,4 +330,3 @@ We also attempted convolutional neural networks (CNNs) to calculate cellularity.
 
 There is portential for the use of deep learning, however with the size of the training datasets available to us it is unlikely to significantly improve on the edge detection approach. Furthermore, using the edge detection approch, we are able to validate the outputs of the algorithm by simply looking at the segmented image. This contrasts the CNN method where there is only one cellularity output with no segmented image. One way to combat this is to train the model on segmented images as opposed to raw cellularities. The reason we did not do this is because there are no leica .roi reader R packages. We attempted parsing the files but could not find a suitable method.
 
-try non-linear regression for normalisation???

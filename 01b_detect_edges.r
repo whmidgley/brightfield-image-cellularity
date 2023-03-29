@@ -38,14 +38,14 @@ xb <- (xb - min(xb)) / (max(xb) - min(xb))
 
 plot(xb)
 
-if (mean(xb) < 0.3 && sd(xb) > 0.05) {
-  cat("Smooth image, cutting top end...\n")
-  xb <- case_when(xb > 0.6 ~ 0.6, TRUE ~ matrix(xb))
-  xb <- (xb - min(xb)) / (max(xb) - min(xb))
-  xb <- Image(matrix(xb, ncol = ncol(img)))
-}
-
 m_bf_blur <- xb
+
+while (mean(m_bf_blur[xb>cut_off]) < 0.3) {
+  cat("Smooth image, cutting top end...\n")
+  m_bf_blur <- case_when(matrix(m_bf_blur) > 0.95 ~ 0.95, TRUE ~ matrix(m_bf_blur, ncol= 1))
+  m_bf_blur <- (m_bf_blur - min(m_bf_blur)) / (max(m_bf_blur) - min(m_bf_blur))
+  m_bf_blur <- Image(matrix(m_bf_blur, ncol = ncol(img)))
+}
 
 plot(m_bf_blur)
 

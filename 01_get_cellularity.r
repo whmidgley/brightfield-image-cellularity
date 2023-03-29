@@ -4,7 +4,7 @@
 # ==========================================================================
 
 if (Sys.info()["user"] == "william.midgley") {
-  setwd("C:/Users/william.midgley/Documents/Personal development/Amy's PhD/cell-analysis")
+  setwd("C:/Users/william.midgley/OneDrive - Swansea University/Documents/projects/Amy's PhD/cell-analysis")
 } else {
   cat("Please add wd\n")
 }
@@ -61,7 +61,9 @@ options(repr.plot.width = 15, repr.plot.height = 20)
 
 blur <- 1.464
 
-cut_off <- 0.07
+brightness_mean <- 0.3
+
+cut_off <- 0.1
 
 error_factor <- 1.5
 
@@ -76,7 +78,7 @@ images <- list.files(path = "brightfield-images", pattern = "tif", recursive = F
 cellularities <- data.frame(matrix(nrow=length(images), ncol=2))
 colnames(cellularities) <- c("image_name", "cellularity")
 
-image_names <- sub('.+/(.+)', '\\1', images)
+image_names <- sub('.+/(.+)', '\\1', images) %>% str_replace("Effectene.lif_", "") %>% str_replace("Snapshot1.tif", "") %>% str_replace(".lif_", " ")
 
 # ==========================================================================
 # Check I have the same number of reports as images

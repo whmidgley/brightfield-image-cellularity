@@ -16,13 +16,19 @@ d_bf_cut_off <- case_when(
 m_bf_cut_off <- Image(matrix(d_bf_cut_off, ncol = ncol(m_bf_blur)))
 
 plot(m_bf_cut_off)
- 
+
 xb <- bwlabel(m_bf_cut_off)
 FS <- computeFeatures.shape(xb)
 sel <- which(FS[,"s.area"] < 500)
 xe <- rmObjects(xb, sel)
 plot(xe)
- 
+
+
+xe <- case_when(
+  matrix(xe) >= 0.5 ~ 1,
+  TRUE ~ 0)
+xe <- matrix(xe, ncol = ncol(m_bf)) %>% Image()
+
 m_bf_segmented <- xe
 
 hfilt <- matrix(c(1, 2, 1, 0, 0, 0, -1, -2, -1), nrow = 3) # sobel
@@ -41,7 +47,7 @@ edata <- sqrt((hdata)^2 + (vdata)^2)
 
 # transform edge data to image
 imgE <- Image(edata)
-imgE <- matrix(case_when(imgE < 0.5 ~ 0, imgE >= 0.5 ~ 1), ncol = ncol(imgE)) %>% Image()
+imgE <- matrix(case_when(matrix(imgE) < 0.5 ~ 0, matrix(imgE) >= 0.5 ~ 1), ncol = ncol(imgE)) %>% Image()
 
 m_bf_edges <- imgE
 
@@ -71,7 +77,7 @@ m_bf_overlay[,,3][m_bf_edges == 1] <- 0
 plot(m_bf_overlay)
 
 if(exists("images")) {
-writeImage(xe, paste0("segmented/", sub('.+/(.+)', '\\1', images[j]) %>% str_replace_all(".tif", "_segmented.tif")))
+writeImage(xe, paste0("segmented/", image_names[j], " segmented.tif"))
 
-writeImage(m_bf_overlay, paste0("overlay/", sub('.+/(.+)', '\\1', images[j]) %>% str_replace_all(".tif", "_overlay.tif")))
+writeImage(m_bf_overlay, paste0("overlay/", image_names[j], " overlay.tif"))
 }

@@ -44,6 +44,8 @@ brightfield-images/20190322*
 brightfield-images/20190531*
 brightfield-images/20191114*
 
+grid-cellularities/
+
 segmented/
 overlay/
 99_cellularity_report_files/
@@ -52,4 +54,5 @@ brightfield-images/reports/
 
 automated_cellularities.csv
 human_cellularities.csv
+human_cellularities_fixed.csv
 cellularities.csv
