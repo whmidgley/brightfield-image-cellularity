@@ -110,10 +110,20 @@ auto_cellularities[j,] <- c(image_names[j], print(computer_cellularity))
 
 write.csv(auto_cellularities, "automated_cellularities.csv", row.names = FALSE)
 
-source("02_get_human_cellularity.r")
+#source("02_get_human_cellularity.r")
 
-mean_error <- mean(cellularities$error, na.rm = TRUE)
+auto_cellularities <- read.csv("automated_cellularities.csv")
+human_cellularities <- read.csv("human_cellularities_fixed.csv")[,c(1:2)]
+cellularities <- inner_join(human_cellularities, auto_cellularities, by = c(human_name = "name"))
 
-cat("Mean error is", mean_error, "\n")
+cellularities$error <- cellularities$cellularity - cellularities$human_cellularity
+
+colnames(cellularities) <- c("name", "human_cellularity", "automated_cellularity", "error")
+
+write.csv(cellularities, "cellularities.csv", row.names = FALSE)
+
+mean_sqerror <- mean(cellularities$error^2, na.rm = TRUE)
+
+cat("Mean square error is", mean_sqerror, "\n")
 
 beep()

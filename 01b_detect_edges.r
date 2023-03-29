@@ -40,7 +40,7 @@ plot(xb)
 
 m_bf_blur <- xb
 
-while (mean(m_bf_blur[xb>cut_off]) < 0.3) {
+while (mean(m_bf_blur[xb>cut_off]) < brightness_mean) {
   cat("Smooth image, cutting top end...\n")
   m_bf_blur <- case_when(matrix(m_bf_blur) > 0.95 ~ 0.95, TRUE ~ matrix(m_bf_blur, ncol= 1))
   m_bf_blur <- (m_bf_blur - min(m_bf_blur)) / (max(m_bf_blur) - min(m_bf_blur))
