@@ -100,7 +100,9 @@ for (j in 1:length(images)) {
 	cat("Image",j,"=================\n")
 	m_bf <- suppressWarnings(readImage(paste0(images[j])))
 
-source("01a_remove_gradient.r")
+if(!file.exists(paste0("normalised-images/", image_names[j], " normalised.tif"))) {
+	source("01a_remove_gradient.r")
+}
 source("01b_detect_edges.r")
 source("01c_cut_off.r")
 source("01d_by_grid.r")

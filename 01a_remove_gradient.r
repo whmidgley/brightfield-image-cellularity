@@ -62,4 +62,4 @@ m_bf_normal <- array(
 # Save normalised image
 # ==========================================================================
 
-save(m_bf_normal, file = "r-objects/m_bf_normal.RData")
+writeImage(m_bf_normal, paste0("normalised-images/", image_names[j], " normalised.tif"))

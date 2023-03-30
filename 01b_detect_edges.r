@@ -4,9 +4,7 @@ cat("Detecting edges and blurring...\n")
 # Load image
 # ==========================================================================
 
-load("r-objects/m_bf_normal.RData")
-
-img <- m_bf_normal
+img <- readImage(paste0("normalised-images/", image_names[j], " normalised.tif"))
 
 # ==========================================================================
 # Edge detection
@@ -48,5 +46,3 @@ while (mean(m_bf_blur[xb>cut_off]) < brightness_mean) {
 }
 
 plot(m_bf_blur)
-
-save(m_bf_blur, file ="r-objects/m_bf_blur.RData")

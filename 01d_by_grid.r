@@ -61,4 +61,4 @@ m_cellularity_grid <- matrix(d_cellularity_grid, ncol = grid_no)
 
 if(exists("image_names")) {
 write.table(m_cellularity_grid, paste0("grid-cellularities/", image_names[j], " ", grid_no, "x", grid_no, " grid.csv"), row.names = FALSE, col.names = FALSE, sep = ",")
-}
+} 

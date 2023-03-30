@@ -4,8 +4,6 @@ cat("Calculating cellularity...\n")
 # Read images
 # ==========================================================================
 
-load("r-objects/m_bf_blur.RData")
-
 m_bf_blur <- m_bf_blur/max(m_bf_blur)
 d_bf_blur <- data.frame(matrix(m_bf_blur, ncol=1))
 
@@ -58,7 +56,7 @@ prop_background_edge <-
     length() / length(d_bf_cut_off)
 
 
-prop_background <-
+prop_background <- 
   xe[xe == 0] %>%
     length() / length(d_bf_cut_off)
 
