@@ -137,7 +137,7 @@ plot(Image(plane_normal))
 
 Fig.7: Normalised image
 ```{r}
-plot(m_bf_normal)
+plot(Image(m_bf_normal))
 
 ```
 Sometimes, this doesn't remove all gradients as there can be overlapping gradients. Therefore we performed this normalisation process three times per image.

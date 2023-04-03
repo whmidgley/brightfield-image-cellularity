@@ -3,3 +3,6 @@ pacman::p_load(tidyverse, beepr, stringr, BiocManager)
 
 library(BiocManager)
 BiocManager::install("EBImage")
+BiocManager::install("aoles/RBioFormats")
+
+#N.B. make sure to download Java
