@@ -61,6 +61,6 @@ m_bf_normal <- array(
 # ==========================================================================
 # Save normalised image
 # ==========================================================================
-if(exists("images")){
+if(exists("image_names")){
 writeImage(m_bf_normal, paste0("normalised-images/", image_names[j], " normalised.tif"))
 }
