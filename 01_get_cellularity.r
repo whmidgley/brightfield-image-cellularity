@@ -63,11 +63,13 @@ blur <- 1.464
 
 brightness_mean <- 0.3
 
-cut_off <- 0.1
+cut_off <- 0.0723
 
 error_factor <- 1.5
 
 grid_no <- 4
+
+flag_thresh <- 10
 
 # ==========================================================================
 # Load images
@@ -92,8 +94,8 @@ if (length(images) != length(reports)) warning("No. images does not equal no. re
 # Calculate cellularities
 # ==========================================================================
 
-auto_cellularities <- data.frame(matrix(ncol = 2, nrow = length(image_names)))
-colnames(auto_cellularities) <- c("name", "cellularity")
+auto_cellularities <- data.frame(matrix(ncol = 3, nrow = length(image_names)))
+colnames(auto_cellularities) <- c("name", "cellularity", "high_compensation_flag")
 
 
 for (j in 1:length(images)) {
@@ -107,7 +109,8 @@ source("01b_detect_edges.r")
 source("01c_cut_off.r")
 source("01d_by_grid.r")
 
-auto_cellularities[j,] <- c(image_names[j], print(computer_cellularity))
+auto_cellularities[j,] <- c(image_names[j], print(computer_cellularity), case_when((1-prop_background_edge)*error_factor*100 > flag_thresh ~ "CHECK OUTLINE",
+																									TRUE ~ "image normal"))
 }
 
 write.csv(auto_cellularities, "automated_cellularities.csv", row.names = FALSE)
@@ -120,7 +123,7 @@ cellularities <- inner_join(human_cellularities, auto_cellularities, by = c(huma
 
 cellularities$error <- cellularities$cellularity - cellularities$human_cellularity
 
-colnames(cellularities) <- c("name", "human_cellularity", "automated_cellularity", "error")
+colnames(cellularities) <- c("name", "human_cellularity", "automated_cellularity", "high_compensation_flag", "error")
 
 write.csv(cellularities, "cellularities.csv", row.names = FALSE)
 
@@ -128,4 +131,4 @@ mean_sqerror <- mean(cellularities$error^2, na.rm = TRUE)
 
 cat("Mean square error is", mean_sqerror, "\n")
 
-beep()
+beep() 

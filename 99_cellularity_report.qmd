@@ -26,6 +26,8 @@ cut_off <- 0.07
 
 error_factor <- 1.5
 
+brightness_mean <- 0.3
+
 grid_no <- 4
 ```
 *See github and kaggle pages for code:*
@@ -100,7 +102,6 @@ persp3D(z = t(m_bf[,,1]), xlab = "right", ylab = "bottom", zlab = "brightness", 
 Fig.6a: 3D plane
 ```{r}
 invisible(capture.output(source("01a_remove_gradient.r")))
-m_bf_normal <- Image(m_bf_normal[,,1])
 
 d_normal <- data.frame(matrix(t(m_bf[,,1]), ncol=1))
 
@@ -328,5 +329,5 @@ From there we clustered the images into clusters determined by a representitativ
 
 We also attempted convolutional neural networks (CNNs) to calculate cellularity. We used the human calculated cellularities (outcome variable) and their respective images (predictor variable) as the training dataset. We tried an linear final activation function, and a sigmoid final activation function (these are different ways of outputting the results of the CNN). Because of our very small dataset for CNNs (~100 images), our model could not attain a competitive accuracy. In order to mitigate against this, we used transfer learning (adapting pretrained models by training only the last few layers on our own dataset) and image augmentation to increase accuracy (flipping the image and changing the brightness to provide more training data and reduce overfitting). This made the model much more competitive, achieving a mean error of 3-4%, however this is still less accurate than the edge detection method.
 
-There is portential for the use of deep learning, however with the size of the training datasets available to us it is unlikely to significantly improve on the edge detection approach. Furthermore, using the edge detection approch, we are able to validate the outputs of the algorithm by simply looking at the segmented image. This contrasts the CNN method where there is only one cellularity output with no segmented image. One way to combat this is to train the model on segmented images as opposed to raw cellularities. The reason we did not do this is because there are no leica .roi reader R packages. We attempted parsing the files but could not find a suitable method.
+There is potential for the use of deep learning, however with the size of the training datasets available to us it is unlikely to significantly improve on the edge detection approach. Furthermore, using the edge detection approch, we are able to validate the outputs of the algorithm by simply looking at the segmented image. This contrasts the CNN method where there is only one cellularity output with no segmented image. One way to combat this is to train the model on segmented images as opposed to raw cellularities. The reason we did not do this is because there are no leica .roi reader R packages. We attempted parsing the files but could not find a suitable method.
 

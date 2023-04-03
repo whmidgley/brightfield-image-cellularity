@@ -4,7 +4,11 @@ cat("Detecting edges and blurring...\n")
 # Load image
 # ==========================================================================
 
+if(exists("images")) {
 img <- readImage(paste0("normalised-images/", image_names[j], " normalised.tif"))
+} else {
+img <- m_bf_normal
+}
 
 # ==========================================================================
 # Edge detection
@@ -15,7 +19,7 @@ hfilt <- matrix(c(1, 2, 1, 0, 0, 0, -1, -2, -1), nrow = 3) # sobel
 
 # rotate horizontal filter to obtain vertical filter
 vfilt <- t(hfilt)
- 
+
 # get horizontal and vertical edges
 imgH <- filter2(img[,,1], hfilt, boundary="replicate")
 imgV <- filter2(img[,,1], vfilt, boundary="replicate")
