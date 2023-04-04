@@ -75,7 +75,7 @@ m_bf_overlay[,,3][m_bf_edges == 1] <- 0
 plot(m_bf_overlay)
 
 if(exists("image_names")) {
-writeImage(xe, paste0("segmented/", image_names[j], " segmented.", desired_output_format))
+writeImage(xe, paste0("segmented-images/", image_names[j], " segmented.", desired_output_format))
 
-writeImage(m_bf_overlay, paste0("overlay/", image_names[j], " overlay.", desired_output_format))
+writeImage(m_bf_overlay, paste0("overlay-images/", image_names[j], " overlay.", desired_output_format))
 }
