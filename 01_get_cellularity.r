@@ -38,9 +38,7 @@ pkgs <- c(
 	"EBImage",
 	"RBioFormats",
 	"readr",
-	"stringr",
-	"grid",
-	"gridExtra"
+	"stringr"
 	)
 
 for (pkg in pkgs) {
@@ -87,12 +85,6 @@ flag_thresh <- 15
 
 # This is if you have a file called human_cellularities.csv which contains human calculated cellularities for comparison
 testing <- FALSE
-
-
-
-
-
-
 
 # set defaults if variables are undefined
 if(!exists("blur")) blur <- 0.003
