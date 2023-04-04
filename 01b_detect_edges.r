@@ -4,7 +4,7 @@ cat("Detecting edges and blurring...\n")
 # Load image
 # ==========================================================================
 
-if(exists("image_names")) {
+if(exists("images")) {
 img <- readImage(paste0("normalised-images/", image_names[j], " normalised.tif"))
 } else {
 img <- m_bf_normal
