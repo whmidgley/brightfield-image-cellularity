@@ -1,6 +1,6 @@
 if(change_grid_no) {
-    m_bf_segmented <- readImage(paste0("segmented/", image_names[j], " segmented.", desired_output_format))
-    m_bf_overlay <- readImage(paste0("overlay/", image_names[j], " overlay.", desired_output_format))
+    m_bf_segmented <- readImage(paste0("segmented-images/", image_names[j], " segmented.", desired_output_format))
+    m_bf_overlay <- readImage(paste0("overlay-images/", image_names[j], " overlay.", desired_output_format))
     m_bf_edges <- array(as.numeric(m_bf_overlay[,,2] != m_bf_overlay[,,1]), dim = dim(m_bf_overlay[,,1])) %>% Image()
 }
 
