@@ -1,5 +1,5 @@
 if (!require("pacman")) install.packages("pacman")
-pacman::p_load(tidyverse, beepr, stringr, BiocManager)
+pacman::p_load(tidyverse, beepr, stringr, BiocManager, readr)
 
 library(BiocManager)
 BiocManager::install("EBImage")
