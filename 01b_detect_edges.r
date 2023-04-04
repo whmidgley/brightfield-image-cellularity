@@ -4,11 +4,7 @@ cat("Detecting edges and blurring...\n")
 # Load image
 # ==========================================================================
 
-if(exists("images")) {
-img <- readImage(paste0("normalised-images/", image_names[j], " normalised.tif"))
-} else {
-img <- m_bf_normal
-}
+img <- readImage(paste0("normalised-images/", image_names[j], " normalised.", desired_output_format))
 
 # ==========================================================================
 # Edge detection
@@ -34,7 +30,7 @@ imgE <- Image(edata)
 
 plot(imgE)
 # Low pass filter with gblur
-xb <- gblur(imgE, blur)
+xb <- gblur(imgE, blur*nrow(imgE))
 
 xb <- (xb - min(xb)) / (max(xb) - min(xb))
 

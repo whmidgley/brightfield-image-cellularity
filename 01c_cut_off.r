@@ -17,7 +17,7 @@ plot(m_bf_cut_off)
 
 xb <- bwlabel(m_bf_cut_off)
 FS <- computeFeatures.shape(xb)
-sel <- which(FS[,"s.area"] < 500)
+sel <- which(FS[,"s.area"] < nrow(m_bf_cut_off)^2*0.0006)
 xe <- rmObjects(xb, sel)
 plot(xe)
 
@@ -74,8 +74,8 @@ m_bf_overlay[,,3][m_bf_edges == 1] <- 0
 
 plot(m_bf_overlay)
 
-if(exists("images")) {
-writeImage(xe, paste0("segmented/", image_names[j], " segmented.tif"))
+if(exists("image_names")) {
+writeImage(xe, paste0("segmented/", image_names[j], " segmented.", desired_output_format))
 
-writeImage(m_bf_overlay, paste0("overlay/", image_names[j], " overlay.tif"))
+writeImage(m_bf_overlay, paste0("overlay/", image_names[j], " overlay.", desired_output_format))
 }

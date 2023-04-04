@@ -39,10 +39,8 @@ vignettes/*.pdf
 .Renviron
 
 # Images with sensitive names
-brightfield-images/20190321*
-brightfield-images/20190322*
-brightfield-images/20190531*
-brightfield-images/20191114*
+input-images/
+*.tif
 
 grid-cellularities/
 
