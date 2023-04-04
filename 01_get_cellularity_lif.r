@@ -37,6 +37,7 @@ pkgs <- c(
 	"beepr",
 	"e1071",
 	"EBImage",
+	"RBioFormats",
 	"patchwork",
 	"plot3D",
 	"readr",
@@ -75,12 +76,31 @@ flag_thresh <- 15
 # Load images
 # ==========================================================================
 
-images <- list.files(path = "brightfield-images", pattern = "tif", recursive = FALSE, full.names = TRUE) 
+lif_dirs <- list.files(path = "brightfield-images", pattern = "lif$", recursive = FALSE, full.names = TRUE) 
 
-cellularities <- data.frame(matrix(nrow=length(images), ncol=2))
+
+extract.image <- function(lif_name) {
+	lif <- read.image(lif_name)
+	no_images <- length(lif)/2
+	lif_seq <- no_images + c(1:no_images)
+	
+	return(lif[lif_seq])
+}
+
+image_names <- c()
+for(i in c(1:length(lif_dirs))) {
+	lif <- extract.image(lif_dirs[i])
+	for(j in c(1:length(lif))) {
+		image <- lif[[j]]
+		row_num <- length(lif)*(i-1) + j 
+		image_names[row_num] <- c(paste0(sub('.+/(.+)', '\\1', lif_dirs[i] %>% str_replace(".lif", "")), " Image ", j))
+		assign(paste0("image_", image_names[row_num] %>% str_replace_all(" ", "_")), image)
+	}
+}
+
+
+cellularities <- data.frame(matrix(nrow=length(image_names), ncol=2))
 colnames(cellularities) <- c("image_name", "cellularity")
-
-image_names <- sub('.+/(.+)', '\\1', images) %>% str_replace("Effectene.lif_", "") %>% str_replace("Snapshot1.tif", "") %>% str_replace(".lif_", " ")
 
 # ==========================================================================
 # Check I have the same number of reports as images
@@ -88,7 +108,7 @@ image_names <- sub('.+/(.+)', '\\1', images) %>% str_replace("Effectene.lif_", "
 
 reports <- list.files("Chart_0.csv", path = "brightfield-images/reports", recursive = TRUE, full.names = TRUE) 
 
-if (length(images) != length(reports)) warning("No. images does not equal no. reports")
+if (length(image_names) != length(reports)) warning("No. images does not equal no. reports")
 
 # ==========================================================================
 # Calculate cellularities
@@ -98,9 +118,9 @@ auto_cellularities <- data.frame(matrix(ncol = 3, nrow = length(image_names)))
 colnames(auto_cellularities) <- c("name", "cellularity", "high_compensation_flag")
 
 
-for (j in 1:length(images)) {
+for (j in 1:length(image_names)) {
 	cat("Image",j,"=================\n")
-	m_bf <- suppressWarnings(readImage(paste0(images[j])))
+	m_bf <- suppressWarnings(get(paste0("image_", image_names[j] %>% str_replace_all(" ", "_"))))
 
 if(!file.exists(paste0("normalised-images/", image_names[j], " normalised.tif"))) {
 	source("01a_remove_gradient.r")
