@@ -59,17 +59,17 @@ options(repr.plot.width = 15, repr.plot.height = 20)
 # Variables
 # ==========================================================================
 
-blur <- 1.464
+blur <- 1.5
 
-brightness_mean <- 0.3
+brightness_mean <- 0.35
 
-cut_off <- 0.0723
+cut_off <- 0.08
 
 error_factor <- 1.5
 
 grid_no <- 4
 
-flag_thresh <- 10
+flag_thresh <- 15
 
 # ==========================================================================
 # Load images
