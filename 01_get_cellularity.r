@@ -37,12 +37,8 @@ pkgs <- c(
 	"beepr",
 	"EBImage",
 	"RBioFormats",
-	"patchwork",
-	"plot3D",
 	"readr",
-	"stringr",
-	"grid",
-	"gridExtra"
+	"stringr"
 	)
 
 for (pkg in pkgs) {
@@ -108,8 +104,8 @@ if(!grid_output & change_grid_no) warning("grid_output is FALSE but change_grid_
 if(!dir.exists("input-images")) dir.create("input-images")
 if(!dir.exists("grid-cellularities") & grid_output) dir.create("grid-cellularities")
 if(!dir.exists("normalised-images")) dir.create("normalised-images")
-if(!dir.exists("overlay")) dir.create("overlay")
-if(!dir.exists("segmented")) dir.create("segmented")
+if(!dir.exists("overlay-images")) dir.create("overlay-images")
+if(!dir.exists("segmented-images")) dir.create("segmented-images")
 
 # ==========================================================================
 # File formats
