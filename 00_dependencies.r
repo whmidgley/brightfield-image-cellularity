@@ -5,4 +5,4 @@ library(BiocManager)
 BiocManager::install("EBImage")
 BiocManager::install("aoles/RBioFormats")
 
-#N.B. make sure to download Java
+# N.B. make sure to download Java
