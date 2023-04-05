@@ -58,7 +58,7 @@ options(repr.plot.width = 15, repr.plot.height = 20)
 # Variables
 # ==========================================================================
 
-# I recomend between 0.0015 and 0.0025
+# I recomend between 0.0015 and 0.0035
 blur <- 0.003
 
 # I recomend between 0.1 and 0.5

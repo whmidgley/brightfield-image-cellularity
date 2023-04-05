@@ -1,0 +1,480 @@
+if (Sys.info()["user"] == "william.midgley") {
+  setwd("C:/Users/william.midgley/OneDrive - Swansea University/Documents/projects/Amy's PhD/cell-analysis")
+} else {
+  stop("Please add wd\n")
+}
+
+rm(list = ls())
+
+if(!is.null(names(sessionInfo()$otherPkgs))) {
+	suppressWarnings(
+		invisible(
+			lapply(
+				paste0("package:",
+					names(sessionInfo()$otherPkgs)),
+					detach,
+					character.only = TRUE,
+					unload = TRUE
+					)
+			)
+	)
+}
+
+pkgs <- c(
+	"tidyverse",
+	"beepr",
+	"EBImage",
+	"RBioFormats",
+	"readr",
+	"stringr",
+	"shiny",
+	"shinyjs",
+	"shinyWidgets",
+	"shinyalert"
+	)
+
+for (pkg in pkgs) {
+	suppressWarnings(
+		suppressPackageStartupMessages(
+			library(pkg, character.only = TRUE)
+			)
+		)
+}
+
+options(repr.plot.width = 15, repr.plot.height = 20)
+
+
+
+# Define UI for app that draws a histogram ----
+ui <- fluidPage(
+
+	useShinyjs(),
+
+  # App title ----
+  titlePanel("Calculate cellularities"),
+  HTML("<h4>&nbsp; &nbsp; &nbsp; \n</h4>"),
+  # Sidebar layout with input and output definitions ----
+  sidebarLayout(
+    # Sidebar panel for inputs ----
+    sidebarPanel(
+    	h2("Variables"),
+
+      # Input: Slider for the level of blur applied ----
+      fluidRow(
+      	column(10, style = "justify-content:center;",
+      	sliderInput(inputId = "blur",
+                  label = "Level of blur (proportion of image):",
+                  min = 0.001,
+                  max = 0.005,
+                  value = 0.003)
+      	),
+      	column(1, style = "justify-content:center; padding-top:40px;",
+      actionButton("reset_blur", "Reset", style="padding:4px; font-size:90%")
+      	)
+      ),
+      fluidRow(
+      column(10, style = "justify-content:center;",
+      sliderInput(inputId = "brightness_mean",
+                  label = "Brighten the edge detected image so that the mean brightness is this:",
+                  min = 0.1,
+                  max = 0.5,
+                  value = 0.3)
+      ),
+      column(1, style = "justify-content:center; padding-top:40px;",
+      actionButton("reset_bm", "Reset", style = "padding:4px; font-size:90%")
+      	)
+      ),
+      fluidRow(
+      column(10, style = "justify-content:center;",
+      sliderInput(inputId = "cut_off",
+                  label = "Brightness cut-off for acellular vs cellular area:",
+                  min = 0.02,
+                  max = 0.15,
+                  value = 0.08)
+      ),
+      column(1, style = "justify-content:center; padding-top:40px;",
+      actionButton("reset_co", "Reset", style = "padding:4px; font-size:90%")
+      	)
+      ),
+      fluidRow(
+      column(10, style = "justify-content:center;",
+      sliderInput(inputId = "error_factor",
+                  label = "Proportion of perimeter of segmented area by which cellularity is reduced (Increase alongside blur):",
+                  min = 0.75,
+                  max = 2.50,
+                  value = 1.65)
+      ),
+      column(1, style = "justify-content:center; padding-top:57px;",
+      actionButton("reset_ef", "Reset", style = "padding:4px; font-size:90%")
+      	)
+      ),
+      fluidRow(
+      column(10, style = "justify-content:center;",
+      sliderInput(inputId = "flag_thresh",
+                  label = "Threshold for flagging images with segments with lots of edges (%):",
+                  min = 0,
+                  max = 30,
+                  value = 15)
+      ),
+      column(1, style = "justify-content:center; padding-top:40px;",
+      actionButton("reset_ft", "Reset", style = "padding:4px; font-size:90%")
+      	)
+      ),
+      fluidRow(
+      column(5,
+      numericInput(inputId = "grid_no",
+      			  label = "Number each side of image is divided into for grid",
+      			  value = 4)
+      ),
+      column(7, style = "padding-top:50px;",
+      prettySwitch(inputId = "grid_output",
+      			  label = "Output cellularities by grid?",
+      			  value = FALSE
+      			  )
+      )
+      ),
+      htmlOutput("prettySwitchUI"),
+      selectInput("desired_output_format", "Output format:",
+	  	  c("tif", "png", "jpeg"),
+	  	  selected = "tif"
+	  ),
+      actionButton("reset_all", "Reset all"),
+      ),
+        # Main panel for displaying outputs ----
+    mainPanel = mainPanel(
+
+      # Output: Histogram ----
+      plotOutput(outputId = "distPlot")
+
+    )
+    ),
+      fluidRow(
+      column(1,
+      actionButton("run", "Run algorithm", style = "font-size:200%; background-color:#428bca; color:white;")
+      )
+      ),
+  )
+
+
+
+
+
+# Define server logic required to draw a histogram ----
+server <- function(input, output, session) {
+
+  observeEvent(input$reset_blur,{
+    updateSliderInput(session,"blur", value = 0.003)
+  })
+  observeEvent(input$reset_bm,{
+    updateSliderInput(session,"brightness_mean", value = 0.3)
+  })
+  observeEvent(input$reset_co,{
+    updateSliderInput(session,"cut_off", value = 0.08)
+  })
+  observeEvent(input$reset_ef,{
+    updateSliderInput(session,"error_factor", value = 1.65)
+  })
+  observeEvent(input$reset_ft,{
+    updateSliderInput(session,"flag_thresh", value = 15)
+  })
+  observeEvent(input$grid_no %% 1 != 0 | input$grid_no == "e",{
+    updateNumericInput(session,"grid_no", value = round(input$grid_no))
+  })
+  observeEvent(input$grid_output,{
+  	if(!input$grid_output) {
+  		disable("grid_no")
+  	} else {
+  		enable("grid_no")
+  	}
+  	output$prettySwitchUI <- renderUI({
+  		if(input$grid_output) {
+  		prettySwitch(inputId = "change_grid_no",
+      			  label = "Only get new grid cellularities?\n(This will use the last run's variables)",
+      			  value = FALSE
+      			  )
+  	}
+	})
+  })
+  observeEvent(input$reset_all,{
+    updateSliderInput(session, "blur", value = 0.003)
+    updateSliderInput(session, "brightness_mean", value = 0.3)
+    updateSliderInput(session, "cut_off", value = 0.08)
+    updateSliderInput(session, "error_factor", value = 1.65)
+    updateSliderInput(session,"flag_thresh", value = 15)
+    updateNumericInput(session, "grid_no", value = 4)
+    updateSwitchInput(session, "grid_output", value = FALSE)
+    updateSwitchInput(session, "change_grid_no", value = FALSE)
+    updateSelectInput(session, "desired_output_format", selected = "tif")
+  })
+
+
+observeEvent(input$run,{
+
+# ==========================================================================
+# Variables
+# ==========================================================================
+
+# I recomend between 0.0015 and 0.0035
+blur <- input$blur
+save(blur, file = "blur.rdata")
+# I recomend between 0.1 and 0.5
+brightness_mean <- input$brightness_mean
+save(brightness_mean, file = "brightness_mean.rdata")
+# I recomend between 0.05 and 0.1
+cut_off <- input$cut_off
+save(cut_off, file = "cut_off.rdata")
+# I recomend between 0.75 and 1.75
+error_factor <- input$error_factor
+save(error_factor, file = "error_factor.rdata")
+# Do you want the cellularity to be outputted as a grid?
+grid_output <- input$grid_output
+save(grid_output, file = "grid_output.rdata")
+# whatever you want (provided it's below ~600)
+grid_no <- input$grid_no
+save(grid_no, file = "grid_no.rdata")
+# If you just want to change grid_no on the same variables as a previous run change this to TRUE
+# N.B. it will still do a full run if you haven't run it before
+change_grid_no <- input$change_grid_no
+save(change_grid_no, file = "change_grid_no.rdata")
+# I recomend between 10 and 20
+flag_thresh <- input$flag_thresh
+save(flag_thresh, file = "flag_thresh.rdata")
+desired_output_format <- input$desired_output_format
+save(desired_output_format, file = "desired_output_format.rdata")
+
+
+# set defaults if variables are undefined
+if(is.null("blur")) blur <- 0.003
+if(is.null("brightness_mean")) brightness_mean <- 0.3
+if(is.null("cut_off")) cut_off <- 0.08
+if(is.null("error_factor")) error_factor <- 1.65
+if(is.null("grid_no")) grid_no <- 4
+if(is.null("flag_thresh")) flag_thresh <- 15
+if(is.null("grid_output")) grid_output <- TRUE
+if(is.null(change_grid_no)) change_grid_no <- FALSE
+if(is.null("desired_output_format")) desired_output_format <- "tif"
+if(!grid_output & change_grid_no) shinyalert("grid_output is FALSE but change_grid_no is TRUE.", "Ignoring change_grid_no and doing a full run", type = "warning")
+
+cat("blur is ", blur, "\n")
+cat("brightness_mean is ", brightness_mean, "\n")
+cat("error_factor is ", error_factor, "\n")
+cat("grid_output is ", grid_output, "\n")
+cat("grid_no is ", grid_no, "\n")
+cat("change_grid_no is ", change_grid_no, "\n")
+cat("flag_thresh is ", flag_thresh, "\n")
+cat("desired_output_format is ", desired_output_format, "\n")
+
+# ==========================================================================
+# Check folders exist
+# ==========================================================================
+
+if(!dir.exists("input-images")) dir.create("input-images")
+if(!dir.exists("grid-cellularities") & grid_output) dir.create("grid-cellularities")
+if(!dir.exists("normalised-images")) dir.create("normalised-images")
+if(!dir.exists("overlay-images")) dir.create("overlay-images")
+if(!dir.exists("segmented-images")) dir.create("segmented-images")
+
+
+# ==========================================================================
+# File formats
+# ==========================================================================
+
+# enter your desired output image format. Supported formats are tif, tiff, png and jpeg
+if(!desired_output_format %in% c("tif", "tiff", "png", "jpeg")) stop("Output format not supported.\nSupported formats are tif, tiff, png and jpeg")
+
+# Change to TRUE if you want to manually chage the input format
+auto_lif_detect <- FALSE
+
+
+
+# this is only relevant if you're dealing with images and not .lif files
+# put TRUE if you're dealing with snapshots from leica
+# put FALSE if you're dealing with image formats that aren't taken from leica image snapshots
+leica_snapshot_flg <- TRUE
+
+vector.OR <- function(vector) {
+	sum(vector) > 0 & length(vector) != 0
+}
+vector.AND <- function(vector) {
+	sum(vector) == length(vector)
+}
+
+image_file_contents <- list.files(path = "input-images", recursive = FALSE, full.names = TRUE)
+
+if(length(image_file_contents) == 0) {
+	shinyalert("File input-images is empty", "Please add images or lifs", type = "error")
+	return(NULL)
+}
+if(str_detect(image_file_contents, ".tif$") %>% vector.OR() && !str_detect(image_file_contents, ".(tiff)|(jpeg)|(png)|(lif)$") %>% vector.AND()) {
+	showNotification("Tifs detected. Switching to tif mode\n")
+	input_format <- "tif"
+}
+if(str_detect(image_file_contents, ".tiff$") %>% vector.OR() && !str_detect(image_file_contents, ".(tif)|(jpeg)|(png)|(lif)$") %>% vector.AND()) {
+	showNotification("Tiffs detected. Switching to tiff mode\n")
+	input_format <- "tiff"
+}
+if(str_detect(image_file_contents, ".png$") %>% vector.OR() && !str_detect(image_file_contents, ".(tif)|(tiff)|(jpeg)|(lif)$") %>% vector.AND()) {
+	showNotification("Pngs detected. Switching to png mode\n")
+	input_format <- "png"
+}
+if(str_detect(image_file_contents, ".jpeg$") %>% vector.OR() && !str_detect(image_file_contents, ".(tif)|(tiff)|(png)|(lif)$") %>% vector.AND()) {
+	showNotification("Jpegs detected. Switching to jpeg mode\n")
+	input_format <- "jpeg"
+}
+if(str_detect(image_file_contents, ".lif$") %>% vector.OR() && !str_detect(image_file_contents, ".(tif)|(tiff)|(jpeg)|(png)$") %>% vector.AND()) {
+	showNotification("Lifs detected. Switching to lif mode\n")
+	input_format <- "lif"
+}
+if(str_detect(image_file_contents, ".lif$") %>% vector.OR() && str_detect(image_file_contents, ".(tif)|(tiff)|(jpeg)|(png)$") %>% vector.OR()) {
+	shinyalert("Multiple file formats detected", "Please remove unwanted file format", type = "error")
+	return(NULL)
+}
+if(!str_detect(image_file_contents, ".(tif)|(tiff)|(jpeg)|(png)|(lif)$") %>% vector.OR()) {
+	shinyalert("Files detected are neither lifs nor images. Please add images or lifs",
+		"Supported file formats are .lif, .tif, .tiff, .png, and .jpeg", type = "error")
+	return(NULL)
+} else if((!str_detect(image_file_contents, ".(tif)|(tiff)|(jpeg)|(png)|(lif)$")) %>% vector.OR()) {
+	shinyalert("Other files detected which are neither lifs nor images", type = "warning")
+}
+
+# ==========================================================================
+# Load images
+# ==========================================================================
+
+if(input_format == "lif") {
+
+lif_dirs <- list.files(path = "input-images", pattern = "lif$", recursive = FALSE, full.names = TRUE) 
+
+extract.image <- function(lif_name) {
+	lif <- read.image(lif_name)
+	no_images <- length(lif)/2
+	lif_seq <- c(1:no_images)
+	
+	return(lif[lif_seq])
+}
+
+image_names <- c()
+for(i in c(1:length(lif_dirs))) {
+	lif <- extract.image(lif_dirs[i])
+	for(j in c(1:length(lif))) {
+		image_frame <- lif[[j]]
+		image <- array(dim = c(dim(image_frame)[c(1:2)], 3))
+		image[,,1] <- image_frame[,,2]
+		image[,,2] <- image_frame[,,2]
+		image[,,3] <- image_frame[,,2]
+		image <- Image(image, colormode = "Color")
+		row_num <- length(lif)*(i-1) + j 
+		image_names[row_num] <- c(paste0(sub('.+/(.+)', '\\1', lif_dirs[i] %>% str_replace(".lif", "")), " Image ", j))
+		assign(paste0("image_", image_names[row_num] %>% str_replace_all(" ", "_")), image)
+	}
+}
+} else {
+
+images <- list.files(path = "input-images", pattern = input_format, recursive = FALSE, full.names = TRUE) 
+
+cellularities <- data.frame(matrix(nrow=length(images), ncol=2))
+colnames(cellularities) <- c("image_name", "cellularity")
+
+if(leica_snapshot_flg) {
+image_names <- sub('.+/(.+)', '\\1', images) %>% str_replace("Effectene.lif_", "") %>% str_replace(paste0("Snapshot1.", input_format), "") %>% str_replace(".lif_", " ")
+} else {
+	image_names <- sub('.+/(.+)', '\\1', images) %>% str_replace("Effectene.lif_", "")
+}
+}
+
+# ==========================================================================
+# Check output file isn't open
+# ==========================================================================
+check.writeable <- function(input_file) {
+	if(file.exists(input_file)){
+		try_cellularities <- read.csv(input_file)
+			try_cellularities <- suppressWarnings(try(write.csv(try_cellularities, input_file), silent = TRUE))
+			if(!is.null(try_cellularities)) {
+				shinyalert(paste0(input_file, " is open"), "please close in order to write over it.\n
+					If you want to save the last run, please make a copy by another name", type = "error")
+				return(TRUE)
+			} else {return(FALSE)}
+		}
+}
+
+unwriteable <- check.writeable("cellularities.csv")
+if(unwriteable) return(NULL)
+rm(unwriteable)
+
+if(grid_output) invisible(sapply(paste0("grid-cellularities/", image_names, " ", grid_no, "x", grid_no, " grid.csv"), FUN = check.writeable))
+
+
+auto_cellularities <- data.frame(matrix(ncol = 3, nrow = length(image_names)))
+colnames(auto_cellularities) <- c("name", "cellularity", "high_compensation_flag")
+
+save(image_names, file = "image_names.rdata")
+
+for (j in 1:length(image_names)) {
+	cat("Image",j,"=================\n")
+	if(input_format == "lif") {
+		m_bf <- suppressWarnings(get(paste0("image_", image_names[j] %>% str_replace_all(" ", "_"))))
+		} else {
+		m_bf <- suppressWarnings(readImage(paste0(images[j])))
+	}
+	save(m_bf, file = "m_bf.rdata")
+	save(j, file = "j.rdata")
+
+if(!(change_grid_no & grid_output)) {
+if(file.exists(paste0("normalised-images/", image_names[j], " normalised.", desired_output_format))) {
+	pre_normalised <- readImage(paste0("normalised-images/", image_names[j], " normalised.", desired_output_format))
+	if(!((dim(pre_normalised) == dim(m_bf)) %>% vector.AND())) source("01a_remove_gradient.r")
+	rm("pre_normalised")
+} else {source("01a_remove_gradient.r")}
+
+source("01b_detect_edges.r")
+source("01c_cut_off.r")
+}
+if(grid_output) {
+source("01d_by_grid.r")
+}
+if(!(change_grid_no & grid_output)) {
+auto_cellularities[j,] <- c(image_names[j], print(computer_cellularity), case_when((1-prop_background_edge)*error_factor*100 > flag_thresh ~ "CHECK OUTLINE",
+																									TRUE ~ "image normal"))
+}
+file.remove("m_bf.rdata")
+file.remove("j.rdata")
+}
+
+write.csv(auto_cellularities, "cellularities.csv", row.names = FALSE)
+
+
+cellularities <- read.csv("cellularities.csv")
+
+if(testing) {
+cellularities_test <- inner_join(human_cellularities, cellularities, by = c(human_name = "name"))
+
+cellularities_test$error <- cellularities_test$cellularity - cellularities_test$human_cellularity
+
+colnames(cellularities_test) <- c("name", "human_cellularity", "automated_cellularity", "high_compensation_flag", "error")
+
+write.csv(cellularities_test, "cellularities_test.csv", row.names = FALSE)
+
+mean_sqerror <- mean(cellularities_test$error^2, na.rm = TRUE)
+mean_abs_error <- mean(abs(cellularities_test$error), na.rm = TRUE)
+mean_error <- mean(cellularities_test$error, na.rm = TRUE)
+
+cat("Mean square error is", mean_sqerror, "\n")
+cat("Mean absolute error is", mean_abs_error, "\n")
+cat("Mean error is", mean_error, "\n")
+}
+file.remove("image_names.rdata")
+file.remove("blur.rdata")
+file.remove("brightness_mean.rdata")
+file.remove("cut_off.rdata")
+file.remove("error_factor.rdata")
+file.remove("grid_output.rdata")
+file.remove("grid_no.rdata")
+file.remove("change_grid_no.rdata")
+file.remove("flag_thresh.rdata")
+file.remove("desired_output_format.rdata")
+beep() 
+
+})
+}
+
+shinyApp(ui = ui, server = server)

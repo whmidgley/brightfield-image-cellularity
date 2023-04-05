@@ -3,6 +3,18 @@ cat("Detecting edges and blurring...\n")
 # ==========================================================================
 # Load image
 # ==========================================================================
+if(file.exists("m_bf.rdata")) load("m_bf.rdata")
+if(file.exists("j.rdata")) load("j.rdata")
+if(file.exists("image_names.rdata")) load("image_names.rdata")
+if(file.exists("blur.rdata")) load("blur.rdata")
+if(file.exists("brightness_mean.rdata")) load("brightness_mean.rdata")
+if(file.exists("cut_off.rdata")) load("cut_off.rdata")
+if(file.exists("error_factor.rdata")) load("error_factor.rdata")
+if(file.exists("grid_output.rdata")) load("grid_output.rdata")
+if(file.exists("grid_no.rdata")) load("grid_no.rdata")
+if(file.exists("change_grid_no.rdata")) load("change_grid_no.rdata")
+if(file.exists("flag_thresh.rdata")) load("flag_thresh.rdata")
+if(file.exists("desired_output_format.rdata")) load("desired_output_format.rdata")
 
 img <- readImage(paste0("normalised-images/", image_names[j], " normalised.", desired_output_format))
 
