@@ -41,6 +41,7 @@ vignettes/*.pdf
 # Images with sensitive names
 input-images/
 *.tif
+*.rdata
 
 grid-cellularities/
 
