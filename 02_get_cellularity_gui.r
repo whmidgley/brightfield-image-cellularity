@@ -43,8 +43,6 @@ for (pkg in pkgs) {
 
 options(repr.plot.width = 15, repr.plot.height = 20)
 
-
-
 # Define UI for app that draws a histogram ----
 ui <- fluidPage(
 
@@ -52,7 +50,6 @@ ui <- fluidPage(
 
   # App title ----
   titlePanel("Calculate cellularities"),
-  HTML("<h4>&nbsp; &nbsp; &nbsp; \n</h4>"),
   # Sidebar layout with input and output definitions ----
   sidebarLayout(
     # Sidebar panel for inputs ----
@@ -138,29 +135,75 @@ ui <- fluidPage(
 	  	  c("tif", "png", "jpeg"),
 	  	  selected = "tif"
 	  ),
-      actionButton("reset_all", "Reset all"),
+	  fluidRow(
+	  column(1, style = "padding-top:10px;",
+      actionButton("reset_all", "Reset all")
       ),
-        # Main panel for displaying outputs ----
-    mainPanel = mainPanel(
-
-      # Output: Histogram ----
-      plotOutput(outputId = "distPlot")
-
-    )
-    ),
-      fluidRow(
-      column(1,
+      column(5, offset = 6,
       actionButton("run", "Run algorithm", style = "font-size:200%; background-color:#428bca; color:white;")
-      )
-      ),
-  )
+      )),
+  ),
+    # Main panel for displaying outputs ----
+    mainPanel(
+    fluidRow(
+    	span(htmlOutput("name"), style = "font-size:200%;"),
+    	column(5, offset = 1,
+    	plotOutput("original"),
+    	),
+    	column(5,
+    	plotOutput("normalised")
+    	)
+    ),
+    fluidRow(
+    	column(1,
+    	htmlOutput("prev_image"),
+    	),
+    	column(4, offset = 1,
+    	textOutput("original_label")
+    	),
+    	column(4, offset = 1,
+    	textOutput("normalised_label")
+    	),
+    	column(1, style = "padding-right:10px;",
+    	htmlOutput("next_image")
+    	),
+    ),
+    fluidRow(
+    	column(5, offset = 1,
+    	plotOutput("segmented")
+    	),
+    	column(5,
+    	plotOutput("overlay")
+    	)
+    ),
+    fluidRow(
+    	column(4, offset = 2,
+    	textOutput("segmented_label")
+    	),
+    	column(4, offset = 1,
+    	textOutput("overlay_label")
+    	)
+    ),
+    fluidRow(
+    	htmlOutput("choose_image")
+    	)
+    )
+    )
+)
 
 
 
+# ==========================================================================
+# Server
+# ==========================================================================
 
 
 # Define server logic required to draw a histogram ----
 server <- function(input, output, session) {
+
+rv <- reactiveValues()
+rv$image_no <- 1
+rv$done <- FALSE
 
   observeEvent(input$reset_blur,{
     updateSliderInput(session,"blur", value = 0.003)
@@ -193,7 +236,7 @@ server <- function(input, output, session) {
       			  value = FALSE
       			  )
   	}
-	})
+  })
   })
   observeEvent(input$reset_all,{
     updateSliderInput(session, "blur", value = 0.003)
@@ -208,11 +251,98 @@ server <- function(input, output, session) {
   })
 
 
-observeEvent(input$run,{
 
+    output$name <- renderText({
+    	if(rv$done) paste0("<B>Image name: </B>", image_names[rv$image_no])
+    	})
+  	output$original <- renderPlot({
+  		if(rv$done) {
+  		if(rv$input_format == "lif") {
+		m_bf <- suppressWarnings(get(paste0("image_", image_names[rv$image_no] %>% str_replace_all(" ", "_"))))
+		} else {
+		m_bf <- suppressWarnings(readImage(paste0(rv$images[rv$image_no])))
+	}
+	plot(m_bf)
+	}
+	})
+  	output$normalised <- renderPlot({
+  		if(rv$done) {
+  			readImage(paste0("normalised-images/", image_names[rv$image_no], " normalised.", input$desired_output_format)) %>%
+  			plot()
+  		}
+  	})
+  	output$segmented <- renderPlot({
+  		if(rv$done) {
+  			readImage(paste0("segmented-images/", image_names[rv$image_no], " segmented.", input$desired_output_format)) %>%
+  			plot()
+  		}
+  	})
+  	output$overlay <- renderPlot({
+  		if(rv$done) {
+  			readImage(paste0("overlay-images/", image_names[rv$image_no], " overlay.", input$desired_output_format)) %>%
+  			plot()
+  		}
+  	})
+
+output$original_label <- renderText(if(rv$done) "Original image")
+output$normalised_label <- renderText(if(rv$done) "Normalised image")
+output$segmented_label <- renderText(if(rv$done) "Segmented image")
+output$overlay_label <- renderText(if(rv$done) "Segmented areas overlay original image")
+
+output$prev_image <- renderUI({
+  		if(rv$done) actionButton("prevButtonUI", "Previous Image", value = FALSE)
+})
+output$next_image <- renderUI({
+  		if(rv$done) actionButton("nextButtonUI", "Next Image")
+})
+
+output$choose_image <- renderUI({
+  		if(rv$done) {
+  		selectInput("chosenImageUI", "Image:",
+	  	  image_names,
+	  	  selected = image_names[1]
+	  )
+  	}
+})
+
+observeEvent(rv$image_no, {
+	if(rv$done) {
+	updateSelectInput(session, "chosenImageUI", selected = image_names[rv$image_no])
+	}
+})
+
+observeEvent(input$prevButtonUI, {
+	if(rv$image_no > 1) {
+		rv$image_no <- rv$image_no - 1
+	} else {
+		rv$image_no <- length(image_names)
+	}
+})
+
+observeEvent(input$nextButtonUI, {
+	if(rv$image_no < length(image_names)) {
+		rv$image_no <- rv$image_no + 1
+	} else {
+		rv$image_no <- 1
+	}
+})
+
+observeEvent(input$chosenImageUI, {
+	if(rv$done) {
+	rv$image_no <- c(1,length(image_names))[input$chosenImageUI == image_names]
+}
+})
+
+
+
+observeEvent(input$run, {
+	withProgress(
+      message = "Analysing images...", value = 0, {
 # ==========================================================================
 # Variables
 # ==========================================================================
+
+
 
 # I recomend between 0.0015 and 0.0035
 blur <- input$blur
@@ -279,6 +409,7 @@ if(!dir.exists("segmented-images")) dir.create("segmented-images")
 # File formats
 # ==========================================================================
 
+
 # enter your desired output image format. Supported formats are tif, tiff, png and jpeg
 if(!desired_output_format %in% c("tif", "tiff", "png", "jpeg")) stop("Output format not supported.\nSupported formats are tif, tiff, png and jpeg")
 
@@ -337,6 +468,8 @@ if(!str_detect(image_file_contents, ".(tif)|(tiff)|(jpeg)|(png)|(lif)$") %>% vec
 	shinyalert("Other files detected which are neither lifs nor images", type = "warning")
 }
 
+rv$input_format <- input_format
+
 # ==========================================================================
 # Load images
 # ==========================================================================
@@ -372,6 +505,8 @@ for(i in c(1:length(lif_dirs))) {
 
 images <- list.files(path = "input-images", pattern = input_format, recursive = FALSE, full.names = TRUE) 
 
+rv$images <- images
+
 cellularities <- data.frame(matrix(nrow=length(images), ncol=2))
 colnames(cellularities) <- c("image_name", "cellularity")
 
@@ -385,6 +520,7 @@ image_names <- sub('.+/(.+)', '\\1', images) %>% str_replace("Effectene.lif_", "
 # ==========================================================================
 # Check output file isn't open
 # ==========================================================================
+
 check.writeable <- function(input_file) {
 	if(file.exists(input_file)){
 		try_cellularities <- read.csv(input_file)
@@ -410,7 +546,13 @@ colnames(auto_cellularities) <- c("name", "cellularity", "high_compensation_flag
 save(image_names, file = "image_names.rdata")
 
 for (j in 1:length(image_names)) {
+incProgress(1/length(image_names), message = paste0(image_names[j]))
 	cat("Image",j,"=================\n")
+
+ output$image_name <- renderText({ 
+   paste0(image_names[j])
+ })
+
 	if(input_format == "lif") {
 		m_bf <- suppressWarnings(get(paste0("image_", image_names[j] %>% str_replace_all(" ", "_"))))
 		} else {
@@ -442,26 +584,6 @@ file.remove("j.rdata")
 
 write.csv(auto_cellularities, "cellularities.csv", row.names = FALSE)
 
-
-cellularities <- read.csv("cellularities.csv")
-
-if(testing) {
-cellularities_test <- inner_join(human_cellularities, cellularities, by = c(human_name = "name"))
-
-cellularities_test$error <- cellularities_test$cellularity - cellularities_test$human_cellularity
-
-colnames(cellularities_test) <- c("name", "human_cellularity", "automated_cellularity", "high_compensation_flag", "error")
-
-write.csv(cellularities_test, "cellularities_test.csv", row.names = FALSE)
-
-mean_sqerror <- mean(cellularities_test$error^2, na.rm = TRUE)
-mean_abs_error <- mean(abs(cellularities_test$error), na.rm = TRUE)
-mean_error <- mean(cellularities_test$error, na.rm = TRUE)
-
-cat("Mean square error is", mean_sqerror, "\n")
-cat("Mean absolute error is", mean_abs_error, "\n")
-cat("Mean error is", mean_error, "\n")
-}
 file.remove("image_names.rdata")
 file.remove("blur.rdata")
 file.remove("brightness_mean.rdata")
@@ -474,6 +596,11 @@ file.remove("flag_thresh.rdata")
 file.remove("desired_output_format.rdata")
 beep() 
 
+ output$done <- renderText({ 
+   paste0("Done!")
+ })
+ rv$done <- TRUE 
+})
 })
 }
 
