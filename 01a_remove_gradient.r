@@ -17,7 +17,7 @@ if(file.exists("flag_thresh.rdata")) load("flag_thresh.rdata")
 if(file.exists("desired_output_format.rdata")) load("desired_output_format.rdata")
 
 
-m_bf_gs <- m_bf[,,1]
+m_bf_gs <- m_bf[,,2]
 normal <- m_bf_gs
 reps <- c(1:5)
 rows <- 1:nrow(m_bf)

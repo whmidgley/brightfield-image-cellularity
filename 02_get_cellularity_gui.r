@@ -1,7 +1,7 @@
 if (Sys.info()["user"] == "william.midgley") {
   setwd("C:/Users/william.midgley/OneDrive - Swansea University/Documents/projects/Amy's PhD/cell-analysis")
 } else {
-  stop("Please add wd\n")
+  #setwd("put your file path here and remove the # if run app doesn't work")
 }
 
 rm(list = ls())
@@ -251,15 +251,35 @@ rv$done <- FALSE
   })
 
 
+extract.image <- function(lif_name) {
+	lif <- read.image(lif_name)
+	no_images <- length(lif)/2
+	lif_seq <- c(1:no_images)
+	
+	return(lif[lif_seq])
+}
 
     output$name <- renderText({
-    	if(rv$done) paste0("<B>Image name: </B>", image_names[rv$image_no])
+    	if(rv$done) paste0("<B>Image name: </B>", rv$image_names[rv$image_no])
     	})
   	output$original <- renderPlot({
   		if(rv$done) {
   		if(rv$input_format == "lif") {
-		m_bf <- suppressWarnings(get(paste0("image_", image_names[rv$image_no] %>% str_replace_all(" ", "_"))))
+  		lif_dirs <- list.files(path = "input-images", pattern = "lif$", recursive = TRUE, full.names = TRUE) 
+
+  		for(i in 1:length(lif_dirs)){
+			lif <- extract.image(lif_dirs[i])
+			if(length(lif)*i >= rv$image_no) {
+				image_frame <- lif[[rv$image_no - length(lif)*(i-1)]]
+				image <- array(dim = c(dim(image_frame)[c(1:2)], 3))
+				image[,,1] <- image_frame[,,2]
+				image[,,2] <- image_frame[,,2]
+				image[,,3] <- image_frame[,,2]
+				m_bf <- Image(image, colormode = "Color")
+			}
+		}
 		} else {
+		rv$images <- list.files(path = "input-images", pattern = rv$input_format, recursive = TRUE, full.names = TRUE) 
 		m_bf <- suppressWarnings(readImage(paste0(rv$images[rv$image_no])))
 	}
 	plot(m_bf)
@@ -267,19 +287,19 @@ rv$done <- FALSE
 	})
   	output$normalised <- renderPlot({
   		if(rv$done) {
-  			readImage(paste0("normalised-images/", image_names[rv$image_no], " normalised.", input$desired_output_format)) %>%
+  			readImage(paste0("normalised-images/", rv$image_names[rv$image_no], " normalised.", input$desired_output_format)) %>%
   			plot()
   		}
   	})
   	output$segmented <- renderPlot({
   		if(rv$done) {
-  			readImage(paste0("segmented-images/", image_names[rv$image_no], " segmented.", input$desired_output_format)) %>%
+  			readImage(paste0("segmented-images/", rv$image_names[rv$image_no], " segmented.", input$desired_output_format)) %>%
   			plot()
   		}
   	})
   	output$overlay <- renderPlot({
   		if(rv$done) {
-  			readImage(paste0("overlay-images/", image_names[rv$image_no], " overlay.", input$desired_output_format)) %>%
+  			readImage(paste0("overlay-images/", rv$image_names[rv$image_no], " overlay.", input$desired_output_format)) %>%
   			plot()
   		}
   	})
@@ -299,39 +319,42 @@ output$next_image <- renderUI({
 output$choose_image <- renderUI({
   		if(rv$done) {
   		selectInput("chosenImageUI", "Image:",
-	  	  image_names,
-	  	  selected = image_names[1]
+	  	  rv$image_names,
+	  	  selected = rv$image_names[1]
 	  )
   	}
 })
 
-observeEvent(rv$image_no, {
-	if(rv$done) {
-	updateSelectInput(session, "chosenImageUI", selected = image_names[rv$image_no])
-	}
-})
 
 observeEvent(input$prevButtonUI, {
 	if(rv$image_no > 1) {
 		rv$image_no <- rv$image_no - 1
+	} else if(length(rv$image_names) == 1 ){
+		rv$image_no <- 1
 	} else {
-		rv$image_no <- length(image_names)
+		rv$image_no <- length(rv$image_names)
 	}
+	updateSelectInput(session, "chosenImageUI", selected = rv$image_names[rv$image_no])
 })
 
 observeEvent(input$nextButtonUI, {
-	if(rv$image_no < length(image_names)) {
+	if(rv$image_no < length(rv$image_names)) {
 		rv$image_no <- rv$image_no + 1
+	} else if(length(rv$image_names) == 1){
+		rv$image_no <- 1
 	} else {
 		rv$image_no <- 1
 	}
+	updateSelectInput(session, "chosenImageUI", selected = rv$image_names[rv$image_no])
 })
 
 observeEvent(input$chosenImageUI, {
 	if(rv$done) {
-	rv$image_no <- c(1,length(image_names))[input$chosenImageUI == image_names]
+	rv$image_no <- c(1:length(rv$image_names))[input$chosenImageUI == rv$image_names]
 }
 })
+
+
 
 
 
@@ -342,48 +365,58 @@ observeEvent(input$run, {
 # Variables
 # ==========================================================================
 
-
-
 # I recomend between 0.0015 and 0.0035
 blur <- input$blur
-save(blur, file = "blur.rdata")
 # I recomend between 0.1 and 0.5
 brightness_mean <- input$brightness_mean
-save(brightness_mean, file = "brightness_mean.rdata")
 # I recomend between 0.05 and 0.1
 cut_off <- input$cut_off
-save(cut_off, file = "cut_off.rdata")
 # I recomend between 0.75 and 1.75
 error_factor <- input$error_factor
-save(error_factor, file = "error_factor.rdata")
 # Do you want the cellularity to be outputted as a grid?
 grid_output <- input$grid_output
-save(grid_output, file = "grid_output.rdata")
 # whatever you want (provided it's below ~600)
 grid_no <- input$grid_no
-save(grid_no, file = "grid_no.rdata")
 # If you just want to change grid_no on the same variables as a previous run change this to TRUE
 # N.B. it will still do a full run if you haven't run it before
 change_grid_no <- input$change_grid_no
-save(change_grid_no, file = "change_grid_no.rdata")
 # I recomend between 10 and 20
 flag_thresh <- input$flag_thresh
-save(flag_thresh, file = "flag_thresh.rdata")
 desired_output_format <- input$desired_output_format
-save(desired_output_format, file = "desired_output_format.rdata")
 
 
 # set defaults if variables are undefined
-if(is.null("blur")) blur <- 0.003
-if(is.null("brightness_mean")) brightness_mean <- 0.3
-if(is.null("cut_off")) cut_off <- 0.08
-if(is.null("error_factor")) error_factor <- 1.65
-if(is.null("grid_no")) grid_no <- 4
-if(is.null("flag_thresh")) flag_thresh <- 15
-if(is.null("grid_output")) grid_output <- TRUE
+if(!exists("blur")) blur <- 0.003
+if(!exists("brightness_mean")) brightness_mean <- 0.3
+if(!exists("cut_off")) cut_off <- 0.08
+if(!exists("error_factor")) error_factor <- 1.65
+if(!exists("grid_no")) grid_no <- 4
+if(!exists("flag_thresh")) flag_thresh <- 15
+if(!exists("grid_output")) grid_output <- FALSE
+if(!exists("change_grid_no")) change_grid_no <- FALSE
+if(!exists("desired_output_format")) desired_output_format <- "tif"
+
+
+if(is.null(blur)) blur <- 0.003
+if(is.null(brightness_mean)) brightness_mean <- 0.3
+if(is.null(cut_off)) cut_off <- 0.08
+if(is.null(error_factor)) error_factor <- 1.65
+if(is.null(grid_no)) grid_no <- 4
+if(is.null(flag_thresh)) flag_thresh <- 15
+if(is.null(grid_output)) grid_output <- FALSE
 if(is.null(change_grid_no)) change_grid_no <- FALSE
-if(is.null("desired_output_format")) desired_output_format <- "tif"
+if(is.null(desired_output_format)) desired_output_format <- "tif"
 if(!grid_output & change_grid_no) shinyalert("grid_output is FALSE but change_grid_no is TRUE.", "Ignoring change_grid_no and doing a full run", type = "warning")
+
+save(blur, file = "blur.rdata")
+save(brightness_mean, file = "brightness_mean.rdata")
+save(cut_off, file = "cut_off.rdata")
+save(error_factor, file = "error_factor.rdata")
+save(grid_output, file = "grid_output.rdata")
+save(grid_no, file = "grid_no.rdata")
+save(change_grid_no, file = "change_grid_no.rdata")
+save(flag_thresh, file = "flag_thresh.rdata")
+save(desired_output_format, file = "desired_output_format.rdata")
 
 cat("blur is ", blur, "\n")
 cat("brightness_mean is ", brightness_mean, "\n")
@@ -398,6 +431,7 @@ cat("desired_output_format is ", desired_output_format, "\n")
 # Check folders exist
 # ==========================================================================
 
+
 if(!dir.exists("input-images")) dir.create("input-images")
 if(!dir.exists("grid-cellularities") & grid_output) dir.create("grid-cellularities")
 if(!dir.exists("normalised-images")) dir.create("normalised-images")
@@ -411,7 +445,7 @@ if(!dir.exists("segmented-images")) dir.create("segmented-images")
 
 
 # enter your desired output image format. Supported formats are tif, tiff, png and jpeg
-if(!desired_output_format %in% c("tif", "tiff", "png", "jpeg")) stop("Output format not supported.\nSupported formats are tif, tiff, png and jpeg")
+if(!desired_output_format %in% c("tif", "tiff", "png", "jpeg", "jpg")) stop("Output format not supported.\nSupported formats are tif, tiff, png and jpeg")
 
 # Change to TRUE if you want to manually chage the input format
 auto_lif_detect <- FALSE
@@ -430,41 +464,45 @@ vector.AND <- function(vector) {
 	sum(vector) == length(vector)
 }
 
-image_file_contents <- list.files(path = "input-images", recursive = FALSE, full.names = TRUE)
+image_file_contents <- list.files(path = "input-images", recursive = TRUE, full.names = TRUE)
 
 if(length(image_file_contents) == 0) {
 	shinyalert("File input-images is empty", "Please add images or lifs", type = "error")
 	return(NULL)
 }
-if(str_detect(image_file_contents, ".tif$") %>% vector.OR() && !str_detect(image_file_contents, ".(tiff)|(jpeg)|(png)|(lif)$") %>% vector.AND()) {
+if(str_detect(image_file_contents, ".tif$") %>% vector.OR() && !str_detect(image_file_contents, ".(tiff)|(jpeg)|(jpg)|(png)|(lif)$") %>% vector.AND()) {
 	showNotification("Tifs detected. Switching to tif mode\n")
 	input_format <- "tif"
 }
-if(str_detect(image_file_contents, ".tiff$") %>% vector.OR() && !str_detect(image_file_contents, ".(tif)|(jpeg)|(png)|(lif)$") %>% vector.AND()) {
+if(str_detect(image_file_contents, ".tiff$") %>% vector.OR() && !str_detect(image_file_contents, ".(tif)|(jpeg)|(jpg)|(png)|(lif)$") %>% vector.AND()) {
 	showNotification("Tiffs detected. Switching to tiff mode\n")
 	input_format <- "tiff"
 }
-if(str_detect(image_file_contents, ".png$") %>% vector.OR() && !str_detect(image_file_contents, ".(tif)|(tiff)|(jpeg)|(lif)$") %>% vector.AND()) {
+if(str_detect(image_file_contents, ".png$") %>% vector.OR() && !str_detect(image_file_contents, ".(tif)|(tiff)|(jpeg)|(jpg)|(lif)$") %>% vector.AND()) {
 	showNotification("Pngs detected. Switching to png mode\n")
 	input_format <- "png"
 }
-if(str_detect(image_file_contents, ".jpeg$") %>% vector.OR() && !str_detect(image_file_contents, ".(tif)|(tiff)|(png)|(lif)$") %>% vector.AND()) {
+if(str_detect(image_file_contents, ".jpeg$") %>% vector.OR() && !str_detect(image_file_contents, ".(tif)|(tiff)|(png)|(jpg)|(lif)$") %>% vector.AND()) {
 	showNotification("Jpegs detected. Switching to jpeg mode\n")
 	input_format <- "jpeg"
 }
-if(str_detect(image_file_contents, ".lif$") %>% vector.OR() && !str_detect(image_file_contents, ".(tif)|(tiff)|(jpeg)|(png)$") %>% vector.AND()) {
+if(str_detect(image_file_contents, ".jpg$") %>% vector.OR() && !str_detect(image_file_contents, ".(tif)|(tiff)|(png)|(jpeg)|(lif)$") %>% vector.AND()) {
+	showNotification("Jpgs detected. Switching to jpg mode\n")
+	input_format <- "jpg"
+}
+if(str_detect(image_file_contents, ".lif$") %>% vector.OR() && !str_detect(image_file_contents, ".(tif)|(tiff)|(jpeg)|(jpg)|(png)$") %>% vector.AND()) {
 	showNotification("Lifs detected. Switching to lif mode\n")
 	input_format <- "lif"
 }
-if(str_detect(image_file_contents, ".lif$") %>% vector.OR() && str_detect(image_file_contents, ".(tif)|(tiff)|(jpeg)|(png)$") %>% vector.OR()) {
+if(str_detect(image_file_contents, ".lif$") %>% vector.OR() && str_detect(image_file_contents, ".(tif)|(tiff)|(jpeg)|(jpg)|(png)$") %>% vector.OR()) {
 	shinyalert("Multiple file formats detected", "Please remove unwanted file format", type = "error")
 	return(NULL)
 }
-if(!str_detect(image_file_contents, ".(tif)|(tiff)|(jpeg)|(png)|(lif)$") %>% vector.OR()) {
+if(!str_detect(image_file_contents, ".(tif)|(tiff)|(jpg)|(jpeg)|(png)|(lif)$") %>% vector.OR()) {
 	shinyalert("Files detected are neither lifs nor images. Please add images or lifs",
 		"Supported file formats are .lif, .tif, .tiff, .png, and .jpeg", type = "error")
 	return(NULL)
-} else if((!str_detect(image_file_contents, ".(tif)|(tiff)|(jpeg)|(png)|(lif)$")) %>% vector.OR()) {
+} else if((!str_detect(image_file_contents, ".(tif)|(tiff)|(jpg)|(jpeg)|(png)|(lif)$")) %>% vector.OR()) {
 	shinyalert("Other files detected which are neither lifs nor images", type = "warning")
 }
 
@@ -476,7 +514,7 @@ rv$input_format <- input_format
 
 if(input_format == "lif") {
 
-lif_dirs <- list.files(path = "input-images", pattern = "lif$", recursive = FALSE, full.names = TRUE) 
+lif_dirs <- list.files(path = "input-images", pattern = "lif$", recursive = TRUE, full.names = TRUE) 
 
 extract.image <- function(lif_name) {
 	lif <- read.image(lif_name)
@@ -503,7 +541,7 @@ for(i in c(1:length(lif_dirs))) {
 }
 } else {
 
-images <- list.files(path = "input-images", pattern = input_format, recursive = FALSE, full.names = TRUE) 
+images <- list.files(path = "input-images", pattern = input_format, recursive = TRUE, full.names = TRUE) 
 
 rv$images <- images
 
@@ -516,6 +554,8 @@ image_names <- sub('.+/(.+)', '\\1', images) %>% str_replace("Effectene.lif_", "
 	image_names <- sub('.+/(.+)', '\\1', images) %>% str_replace("Effectene.lif_", "")
 }
 }
+
+rv$image_names <- image_names
 
 # ==========================================================================
 # Check output file isn't open
@@ -530,7 +570,7 @@ check.writeable <- function(input_file) {
 					If you want to save the last run, please make a copy by another name", type = "error")
 				return(TRUE)
 			} else {return(FALSE)}
-		}
+		} else {return(FALSE)}
 }
 
 unwriteable <- check.writeable("cellularities.csv")

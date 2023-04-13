@@ -136,7 +136,7 @@ if(auto_lif_detect) {
 	# input format can be lif or tif
 	input_format <- "lif"
 } else {
-	image_file_contents <- list.files(path = "input-images", recursive = FALSE, full.names = TRUE)
+	image_file_contents <- list.files(path = "input-images", recursive = TRUE, full.names = TRUE)
 
 	if(length(image_file_contents) == 0) {
 		stop("File input-images is empty. Please add images or lifs")
@@ -178,7 +178,7 @@ if(auto_lif_detect) {
 
 if(input_format == "lif") {
 
-lif_dirs <- list.files(path = "input-images", pattern = "lif$", recursive = FALSE, full.names = TRUE) 
+lif_dirs <- list.files(path = "input-images", pattern = "lif$", recursive = TRUE, full.names = TRUE) 
 
 extract.image <- function(lif_name) {
 	lif <- read.image(lif_name)
@@ -205,7 +205,7 @@ for(i in c(1:length(lif_dirs))) {
 }
 } else {
 
-images <- list.files(path = "input-images", pattern = input_format, recursive = FALSE, full.names = TRUE) 
+images <- list.files(path = "input-images", pattern = input_format, recursive = TRUE, full.names = TRUE) 
 
 cellularities <- data.frame(matrix(nrow=length(images), ncol=2))
 colnames(cellularities) <- c("image_name", "cellularity")
