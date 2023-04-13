@@ -9,6 +9,19 @@ if (Sys.info()["user"] == "william.midgley") {
   stop("Please add wd\n")
 }
 
+file.remove("m_bf.rdata")
+file.remove("j.rdata")
+file.remove("image_names.rdata")
+file.remove("blur.rdata")
+file.remove("brightness_mean.rdata")
+file.remove("cut_off.rdata")
+file.remove("error_factor.rdata")
+file.remove("grid_output.rdata")
+file.remove("grid_no.rdata")
+file.remove("change_grid_no.rdata")
+file.remove("flag_thresh.rdata")
+file.remove("desired_output_format.rdata")
+
 # ==========================================================================
 # Clear environment
 # ==========================================================================
@@ -71,7 +84,7 @@ cut_off <- 0.08
 error_factor <- 1.65
 
 # Do you want the cellularity to be outputted as a grid?
-grid_output <- TRUE
+grid_output <- FALSE
 
 # whatever you want (provided it's below ~600)
 grid_no <- 4
@@ -300,4 +313,4 @@ cat("Mean absolute error is", mean_abs_error, "\n")
 cat("Mean error is", mean_error, "\n")
 }
 
-beep() 
+beep()
