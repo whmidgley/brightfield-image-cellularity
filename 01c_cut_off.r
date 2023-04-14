@@ -11,7 +11,7 @@ d_bf_cut_off <- case_when(
 	d_bf_blur < cut_off ~ 0,
 	TRUE ~ 1)
 
-m_bf_cut_off <- Image(matrix(d_bf_cut_off, ncol = ncol(m_bf_blur)))
+m_bf_cut_off <- Image(matrix(d_bf_cut_off, ncol = ncol(m_bf_blur)), colormode = "Color")
 
 plot(m_bf_cut_off)
 
@@ -44,8 +44,8 @@ vdata <- imageData(imgV)
 edata <- sqrt((hdata)^2 + (vdata)^2)
 
 # transform edge data to image
-imgE <- Image(edata)
-imgE <- matrix(case_when(matrix(imgE) < 0.5 ~ 0, matrix(imgE) >= 0.5 ~ 1), ncol = ncol(imgE)) %>% Image()
+imgE <- Image(edata, colormode = "Color")
+imgE <- matrix(case_when(matrix(imgE) < 0.5 ~ 0, matrix(imgE) >= 0.5 ~ 1), ncol = ncol(imgE)) %>% Image(colormode = "Color")
 
 m_bf_edges <- imgE
 
