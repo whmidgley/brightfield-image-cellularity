@@ -379,51 +379,68 @@ leica_snapshot_flg <- TRUE
 vector.OR <- function(vector) {
 	sum(vector) > 0 & length(vector) != 0
 }
+vector.XOR <- function(vector) {
+	sum(vector) == 1 & length(vector) != 0
+}
 vector.AND <- function(vector) {
 	sum(vector) == length(vector)
 }
 
+filetype.test <- function(file, extension) {
+	str_detect(file, paste0(".", extension, "$")) %>% vector.OR()
+}
+
 image_file_contents <- list.files(path = "input-images", recursive = TRUE, full.names = TRUE)
 
-if(length(image_file_contents) == 0) {
-	shinyalert("File input-images is empty", "Please add images or lifs", type = "error")
-	return(NULL)
-}
-if(str_detect(image_file_contents, ".tif$") %>% vector.OR() && !str_detect(image_file_contents, ".(tiff)|(jpeg)|(jpg)|(png)|(lif)$") %>% vector.AND()) {
-	showNotification("Tifs detected. Switching to tif mode\n")
-	input_format <- "tif"
-}
-if(str_detect(image_file_contents, ".tiff$") %>% vector.OR() && !str_detect(image_file_contents, ".(tif)|(jpeg)|(jpg)|(png)|(lif)$") %>% vector.AND()) {
-	showNotification("Tiffs detected. Switching to tiff mode\n")
-	input_format <- "tiff"
-}
-if(str_detect(image_file_contents, ".png$") %>% vector.OR() && !str_detect(image_file_contents, ".(tif)|(tiff)|(jpeg)|(jpg)|(lif)$") %>% vector.AND()) {
-	showNotification("Pngs detected. Switching to png mode\n")
-	input_format <- "png"
-}
-if(str_detect(image_file_contents, ".jpeg$") %>% vector.OR() && !str_detect(image_file_contents, ".(tif)|(tiff)|(png)|(jpg)|(lif)$") %>% vector.AND()) {
-	showNotification("Jpegs detected. Switching to jpeg mode\n")
-	input_format <- "jpeg"
-}
-if(str_detect(image_file_contents, ".jpg$") %>% vector.OR() && !str_detect(image_file_contents, ".(tif)|(tiff)|(png)|(jpeg)|(lif)$") %>% vector.AND()) {
-	showNotification("Jpgs detected. Switching to jpg mode\n")
-	input_format <- "jpg"
-}
-if(str_detect(image_file_contents, ".lif$") %>% vector.OR() && !str_detect(image_file_contents, ".(tif)|(tiff)|(jpeg)|(jpg)|(png)$") %>% vector.AND()) {
-	showNotification("Lifs detected. Switching to lif mode\n")
+if(auto_lif_detect) {
+	# input format can be lif or tif
 	input_format <- "lif"
+} else {
+	image_file_contents <- list.files(path = "input-images", recursive = TRUE, full.names = TRUE)
+
+	compatible_types <- c("lif", "tif", "tiff", "png", "jpeg", "jpg")
+
+	if(length(image_file_contents) == 0) {
+		shinyalert("File input-images is empty", "Please add images or lifs", type = "error")
+		return(NULL)
+	}
+	if(!sapply(X = compatible_types, FUN = filetype.test, file = image_file_contents) %>% vector.XOR()) {
+		shinyalert("Multiple file formats detected", "Please remove unwanted file format", type = "error")
+		return(NULL)
+	}
+	if(filetype.test(image_file_contents, "tif") && !str_detect(image_file_contents, ".(tiff)|(jpeg)|(jpg)|(png)|(lif)$") %>% vector.AND()) {
+		showNotification("Tifs detected. Switching to tif mode\n")
+		input_format <- "tif"
+	}
+	if(filetype.test(image_file_contents, "tiff") && !str_detect(image_file_contents, ".(tif)|(jpeg)|(jpg)|(png)|(lif)$") %>% vector.AND()) {
+		showNotification("Tiffs detected. Switching to tiff mode\n")
+		input_format <- "tiff"
+	}
+	if(filetype.test(image_file_contents, "png") && !str_detect(image_file_contents, ".(tif)|(tiff)|(jpeg)|(jpg)|(lif)$") %>% vector.AND()) {
+		showNotification("Pngs detected. Switching to png mode\n")
+		input_format <- "png"
+	}
+	if(filetype.test(image_file_contents, "jpeg") && !str_detect(image_file_contents, ".(tif)|(tiff)|(jpg)|(png)|(lif)$") %>% vector.AND()) {
+		showNotification("Jpegs detected. Switching to jpeg mode\n")
+		input_format <- "jpeg"
+	}
+	if(filetype.test(image_file_contents, "jpg") && !str_detect(image_file_contents, ".(tif)|(tiff)|(jpeg)|(png)|(lif)$") %>% vector.AND()) {
+		showNotification("Jpgs detected. Switching to jpg mode\n")
+		input_format <- "jpg"
+	}
+	if(filetype.test(image_file_contents, "lif") && !str_detect(image_file_contents, ".(tif)|(tiff)|(jpeg)|(jpg)|(png)$") %>% vector.AND()) {
+		showNotification("Lifs detected. Switching to lif mode\n")
+		input_format <- "lif"
+	}
+	if(!filetype.test(image_file_contents, "(tif)|(tiff)|(jpeg)|(jpg)|(png)|(lif)")) {
+		shinyalert("Files detected are neither lifs nor images. Please add images or lifs",
+			"Supported file formats are .lif, .tif, .tiff, .png, and .jpeg", type = "error")
+		return(NULL)
+	} else if((!filetype.test(image_file_contents, "(tif)|(tiff)|(jpeg)|(jpg)|(png)|(lif)"))) {
+		shinyalert("Other files detected which are neither lifs nor images", type = "warning")
+	}
 }
-if(str_detect(image_file_contents, ".lif$") %>% vector.OR() && str_detect(image_file_contents, ".(tif)|(tiff)|(jpeg)|(jpg)|(png)$") %>% vector.OR()) {
-	shinyalert("Multiple file formats detected", "Please remove unwanted file format", type = "error")
-	return(NULL)
-}
-if(!str_detect(image_file_contents, ".(tif)|(tiff)|(jpg)|(jpeg)|(png)|(lif)$") %>% vector.OR()) {
-	shinyalert("Files detected are neither lifs nor images. Please add images or lifs",
-		"Supported file formats are .lif, .tif, .tiff, .png, and .jpeg", type = "error")
-	return(NULL)
-} else if((!str_detect(image_file_contents, ".(tif)|(tiff)|(jpg)|(jpeg)|(png)|(lif)$")) %>% vector.OR()) {
-	shinyalert("Other files detected which are neither lifs nor images", type = "warning")
-}
+
 
 rv$input_format <- input_format
 
@@ -579,50 +596,66 @@ leica_snapshot_flg <- TRUE
 vector.OR <- function(vector) {
 	sum(vector) > 0 & length(vector) != 0
 }
+vector.XOR <- function(vector) {
+	sum(vector) == 1 & length(vector) != 0
+}
 vector.AND <- function(vector) {
 	sum(vector) == length(vector)
 }
 
+filetype.test <- function(file, extension) {
+	str_detect(file, paste0(".", extension, "$")) %>% vector.OR()
+}
+
 image_file_contents <- list.files(path = "input-images", recursive = TRUE, full.names = TRUE)
 
-if(length(image_file_contents) == 0) {
-	shinyalert("File input-images is empty", "Please add images or lifs", type = "error")
-	return(NULL)
-}
-if(str_detect(image_file_contents, ".tif$") %>% vector.OR() && !str_detect(image_file_contents, ".(tiff)|(jpeg)|(jpg)|(png)|(lif)$") %>% vector.AND()) {
-	showNotification("Tifs detected. Switching to tif mode\n")
-	input_format <- "tif"
-}
-if(str_detect(image_file_contents, ".tiff$") %>% vector.OR() && !str_detect(image_file_contents, ".(tif)|(jpeg)|(jpg)|(png)|(lif)$") %>% vector.AND()) {
-	showNotification("Tiffs detected. Switching to tiff mode\n")
-	input_format <- "tiff"
-}
-if(str_detect(image_file_contents, ".png$") %>% vector.OR() && !str_detect(image_file_contents, ".(tif)|(tiff)|(jpeg)|(jpg)|(lif)$") %>% vector.AND()) {
-	showNotification("Pngs detected. Switching to png mode\n")
-	input_format <- "png"
-}
-if(str_detect(image_file_contents, ".jpeg$") %>% vector.OR() && !str_detect(image_file_contents, ".(tif)|(tiff)|(png)|(jpg)|(lif)$") %>% vector.AND()) {
-	showNotification("Jpegs detected. Switching to jpeg mode\n")
-	input_format <- "jpeg"
-}
-if(str_detect(image_file_contents, ".jpg$") %>% vector.OR() && !str_detect(image_file_contents, ".(tif)|(tiff)|(png)|(jpeg)|(lif)$") %>% vector.AND()) {
-	showNotification("Jpgs detected. Switching to jpg mode\n")
-	input_format <- "jpg"
-}
-if(str_detect(image_file_contents, ".lif$") %>% vector.OR() && !str_detect(image_file_contents, ".(tif)|(tiff)|(jpeg)|(jpg)|(png)$") %>% vector.AND()) {
-	showNotification("Lifs detected. Switching to lif mode\n")
+if(auto_lif_detect) {
+	# input format can be lif or tif
 	input_format <- "lif"
-}
-if(str_detect(image_file_contents, ".lif$") %>% vector.OR() && str_detect(image_file_contents, ".(tif)|(tiff)|(jpeg)|(jpg)|(png)$") %>% vector.OR()) {
-	shinyalert("Multiple file formats detected", "Please remove unwanted file format", type = "error")
-	return(NULL)
-}
-if(!str_detect(image_file_contents, ".(tif)|(tiff)|(jpg)|(jpeg)|(png)|(lif)$") %>% vector.OR()) {
-	shinyalert("Files detected are neither lifs nor images. Please add images or lifs",
-		"Supported file formats are .lif, .tif, .tiff, .png, and .jpeg", type = "error")
-	return(NULL)
-} else if((!str_detect(image_file_contents, ".(tif)|(tiff)|(jpg)|(jpeg)|(png)|(lif)$")) %>% vector.OR()) {
-	shinyalert("Other files detected which are neither lifs nor images", type = "warning")
+} else {
+	image_file_contents <- list.files(path = "input-images", recursive = TRUE, full.names = TRUE)
+
+	compatible_types <- c("lif", "tif", "tiff", "png", "jpeg", "jpg")
+
+	if(length(image_file_contents) == 0) {
+		shinyalert("File input-images is empty", "Please add images or lifs", type = "error")
+		return(NULL)
+	}
+	if(!sapply(X = compatible_types, FUN = filetype.test, file = image_file_contents) %>% vector.XOR()) {
+		shinyalert("Multiple file formats detected", "Please remove unwanted file format", type = "error")
+		return(NULL)
+	}
+	if(filetype.test(image_file_contents, "tif") && !str_detect(image_file_contents, ".(tiff)|(jpeg)|(jpg)|(png)|(lif)$") %>% vector.AND()) {
+		showNotification("Tifs detected. Switching to tif mode\n")
+		input_format <- "tif"
+	}
+	if(filetype.test(image_file_contents, "tiff") && !str_detect(image_file_contents, ".(tif)|(jpeg)|(jpg)|(png)|(lif)$") %>% vector.AND()) {
+		showNotification("Tiffs detected. Switching to tiff mode\n")
+		input_format <- "tiff"
+	}
+	if(filetype.test(image_file_contents, "png") && !str_detect(image_file_contents, ".(tif)|(tiff)|(jpeg)|(jpg)|(lif)$") %>% vector.AND()) {
+		showNotification("Pngs detected. Switching to png mode\n")
+		input_format <- "png"
+	}
+	if(filetype.test(image_file_contents, "jpeg") && !str_detect(image_file_contents, ".(tif)|(tiff)|(jpg)|(png)|(lif)$") %>% vector.AND()) {
+		showNotification("Jpegs detected. Switching to jpeg mode\n")
+		input_format <- "jpeg"
+	}
+	if(filetype.test(image_file_contents, "jpg") && !str_detect(image_file_contents, ".(tif)|(tiff)|(jpeg)|(png)|(lif)$") %>% vector.AND()) {
+		showNotification("Jpgs detected. Switching to jpg mode\n")
+		input_format <- "jpg"
+	}
+	if(filetype.test(image_file_contents, "lif") && !str_detect(image_file_contents, ".(tif)|(tiff)|(jpeg)|(jpg)|(png)$") %>% vector.AND()) {
+		showNotification("Lifs detected. Switching to lif mode\n")
+		input_format <- "lif"
+	}
+	if(!filetype.test(image_file_contents, "(tif)|(tiff)|(jpeg)|(jpg)|(png)|(lif)")) {
+		shinyalert("Files detected are neither lifs nor images. Please add images or lifs",
+			"Supported file formats are .lif, .tif, .tiff, .png, and .jpeg", type = "error")
+		return(NULL)
+	} else if((!filetype.test(image_file_contents, "(tif)|(tiff)|(jpeg)|(jpg)|(png)|(lif)"))) {
+		shinyalert("Other files detected which are neither lifs nor images", type = "warning")
+	}
 }
 
 rv$input_format <- input_format
@@ -717,6 +750,14 @@ incProgress(1/length(image_names), message = paste0(image_names[j]))
 		} else {
 		m_bf <- suppressWarnings(readImage(paste0(images[j])))
 	}
+	if(length(dim(m_bf)) == 2) {
+		make_colour <- array(dim = c(dim(m_bf), "3"))
+		make_colour[,,1] <- m_bf
+		make_colour[,,2] <- m_bf
+		make_colour[,,3] <- m_bf
+		m_bf <- make_colour
+	}
+
 	save(m_bf, file = "m_bf.rdata")
 	save(j, file = "j.rdata")
 
@@ -865,8 +906,15 @@ leica_snapshot_flg <- TRUE
 vector.OR <- function(vector) {
 	sum(vector) > 0 & length(vector) != 0
 }
+vector.XOR <- function(vector) {
+	sum(vector) == 1 & length(vector) != 0
+}
 vector.AND <- function(vector) {
 	sum(vector) == length(vector)
+}
+
+filetype.test <- function(file, extension) {
+	str_detect(file, paste0(".", extension, "$")) %>% vector.OR()
 }
 
 image_file_contents <- list.files(path = "input-images", recursive = TRUE, full.names = TRUE)
@@ -1004,6 +1052,15 @@ j <- rv$image_no
 		} else {
 		m_bf <- suppressWarnings(readImage(paste0(images[j])))
 	}
+
+	if(length(dim(m_bf)) == 2) {
+		make_colour <- array(dim = c(dim(m_bf), "3"))
+		make_colour[,,1] <- m_bf
+		make_colour[,,2] <- m_bf
+		make_colour[,,3] <- m_bf
+		m_bf <- make_colour
+	}
+
 	save(m_bf, file = "m_bf.rdata")
 	save(j, file = "j.rdata")
 

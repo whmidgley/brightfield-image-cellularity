@@ -4,7 +4,7 @@
 # ==========================================================================
 
 if (Sys.info()["user"] == "william.midgley") {
-  setwd("C:/Users/william.midgley/OneDrive - Swansea University/Documents/projects/Amy's PhD/cell-analysis")
+  setwd("~/projects/Amy's PhD/cell-analysis")
 } else {
   stop("Please add wd\n")
 }
@@ -124,9 +124,9 @@ if(!dir.exists("segmented-images")) dir.create("segmented-images")
 # File formats
 # ==========================================================================
 
-# enter your desired output image format. Supported formats are tif, tiff, png and jpeg
+# enter your desired output image format. Supported formats are tif, tiff, png, jpg and jpeg
 desired_output_format <- "tif"
-if(!desired_output_format %in% c("tif", "tiff", "png", "jpeg")) stop("Output format not supported.\nSupported formats are tif, tiff, png and jpeg")
+if(!desired_output_format %in% c("tif", "tiff", "png", "jpeg", "jpg")) stop("Output format not supported.\nSupported formats are tif, tiff, png, jpg and jpeg")
 
 # Change to TRUE if you want to manually chage the input format
 auto_lif_detect <- FALSE
@@ -141,8 +141,15 @@ leica_snapshot_flg <- TRUE
 vector.OR <- function(vector) {
 	sum(vector) > 0 & length(vector) != 0
 }
+vector.XOR <- function(vector) {
+	sum(vector) == 1 & length(vector) != 0
+}
 vector.AND <- function(vector) {
 	sum(vector) == length(vector)
+}
+
+filetype.test <- function(file, extension) {
+	str_detect(file, paste0(".", extension, "$")) %>% vector.OR()
 }
 
 if(auto_lif_detect) {
@@ -151,36 +158,42 @@ if(auto_lif_detect) {
 } else {
 	image_file_contents <- list.files(path = "input-images", recursive = TRUE, full.names = TRUE)
 
+	compatible_types <- c("lif", "tif", "tiff", "png", "jpeg", "jpg")
+
 	if(length(image_file_contents) == 0) {
 		stop("File input-images is empty. Please add images or lifs")
 	}
-	if(str_detect(image_file_contents, ".tif$") %>% vector.OR() && !str_detect(image_file_contents, ".(tiff)|(jpeg)|(png)|(lif)$") %>% vector.AND()) {
+	if(!sapply(X = compatible_types, FUN = filetype.test, file = image_file_contents) %>% vector.XOR()) {
+		stop("Multiple file formats detected. Please remove unwanted file format")
+	}
+	if(filetype.test(image_file_contents, "tif") && !str_detect(image_file_contents, ".(tiff)|(jpeg)|(jpg)|(png)|(lif)$") %>% vector.AND()) {
 		cat("Tifs detected. Switching to tif mode\n")
 		input_format <- "tif"
 	}
-	if(str_detect(image_file_contents, ".tiff$") %>% vector.OR() && !str_detect(image_file_contents, ".(tif)|(jpeg)|(png)|(lif)$") %>% vector.AND()) {
+	if(filetype.test(image_file_contents, "tiff") && !str_detect(image_file_contents, ".(tif)|(jpeg)|(jpg)|(png)|(lif)$") %>% vector.AND()) {
 		cat("Tiffs detected. Switching to tiff mode\n")
 		input_format <- "tiff"
 	}
-	if(str_detect(image_file_contents, ".png$") %>% vector.OR() && !str_detect(image_file_contents, ".(tif)|(tiff)|(jpeg)|(lif)$") %>% vector.AND()) {
+	if(filetype.test(image_file_contents, "png") && !str_detect(image_file_contents, ".(tif)|(tiff)|(jpeg)|(jpg)|(lif)$") %>% vector.AND()) {
 		cat("Pngs detected. Switching to png mode\n")
 		input_format <- "png"
 	}
-	if(str_detect(image_file_contents, ".jpeg$") %>% vector.OR() && !str_detect(image_file_contents, ".(tif)|(tiff)|(png)|(lif)$") %>% vector.AND()) {
+	if(filetype.test(image_file_contents, "jpeg") && !str_detect(image_file_contents, ".(tif)|(tiff)|(jpg)|(png)|(lif)$") %>% vector.AND()) {
 		cat("Jpegs detected. Switching to jpeg mode\n")
 		input_format <- "jpeg"
 	}
-	if(str_detect(image_file_contents, ".lif$") %>% vector.OR() && !str_detect(image_file_contents, ".(tif)|(tiff)|(jpeg)|(png)$") %>% vector.AND()) {
+	if(filetype.test(image_file_contents, "jpg") && !str_detect(image_file_contents, ".(tif)|(tiff)|(jpeg)|(png)|(lif)$") %>% vector.AND()) {
+		cat("Jpgs detected. Switching to jpg mode\n")
+		input_format <- "jpg"
+	}
+	if(filetype.test(image_file_contents, "lif") && !str_detect(image_file_contents, ".(tif)|(tiff)|(jpeg)|(jpg)|(png)$") %>% vector.AND()) {
 		cat("Lifs detected. Switching to lif mode\n")
 		input_format <- "lif"
 	}
-	if(str_detect(image_file_contents, ".lif$") %>% vector.OR() && str_detect(image_file_contents, ".(tif)|(tiff)|(jpeg)|(png)$") %>% vector.OR()) {
-		stop("Multiple file formats detected. Please remove unwanted file format")
-	}
-	if(!str_detect(image_file_contents, ".(tif)|(tiff)|(jpeg)|(png)|(lif)$") %>% vector.OR()) {
+	if(!filetype.test(image_file_contents, "(tif)|(tiff)|(jpeg)|(jpg)|(png)|(lif)")) {
 		stop("Files detected are neither lifs nor images. Please add images or lifs\n
-			Supported file formats are .lif, .tif, .tiff, .png, and .jpeg")
-	} else if((!str_detect(image_file_contents, ".(tif)|(tiff)|(jpeg)|(png)|(lif)$")) %>% vector.OR()) {
+			Supported file formats are .lif, .tif, .tiff, .png, jpg and .jpeg")
+	} else if((!filetype.test(image_file_contents, "(tif)|(tiff)|(jpeg)|(jpg)|(png)|(lif)"))) {
 		warning("Other files detected which are neither lifs nor images")
 	}
 }
@@ -269,6 +282,14 @@ for (j in 1:length(image_names)) {
 		m_bf <- suppressWarnings(get(paste0("image_", image_names[j] %>% str_replace_all(" ", "_"))))
 		} else {
 		m_bf <- suppressWarnings(readImage(paste0(images[j])))
+	}
+
+	if(length(dim(m_bf)) == 2) {
+		make_colour <- array(dim = c(dim(m_bf), "3"))
+		make_colour[,,1] <- m_bf
+		make_colour[,,2] <- m_bf
+		make_colour[,,3] <- m_bf
+		m_bf <- make_colour
 	}
 
 if(!(change_grid_no & grid_output)) {
