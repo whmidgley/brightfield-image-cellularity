@@ -276,7 +276,7 @@ if(testing){
 check.writeable <- function(input_file) {
 	if(file.exists(input_file)){
 		try_cellularities <- read.csv(input_file)
-			try_cellularities <- suppressWarnings(try(write.csv(try_cellularities, input_file), silent = TRUE))
+			try_cellularities <- suppressWarnings(try(write.csv(try_cellularities, input_file, row.names = FALSE), silent = TRUE))
 			if(!is.null(try_cellularities)) {
 				stop(paste0(input_file, " is open, please close in order to write over it.\n
 					If you want to save the last run, please make another copy by another name"))
@@ -284,10 +284,28 @@ check.writeable <- function(input_file) {
 		}
 }
 
-check.writeable("cellularities.csv")
-if(testing) check.writeable("cellularities_test.csv")
-if(grid_output) invisible(sapply(paste0("grid-cellularities/", image_names, " ", grid_no, "x", grid_no, " grid.csv"), FUN = check.writeable))
+check.writeable.grid <- function(input_file) {
+	if(file.exists(input_file)){
+		try_cellularities <- read.csv(input_file)
+			try_cellularities <- suppressWarnings(try(write.table(try_cellularities, input_file, row.names = FALSE, col.names = FALSE, sep = ","), silent = TRUE))
+			if(!is.null(try_cellularities)) {
+				shinyalert(paste0(input_file, " is open"), "please close in order to write over it.\n
+					If you want to save the last run, please make a copy by another name", type = "error")
+				return(TRUE)
+			} else {return(FALSE)}
+		} else {return(FALSE)}
+}
 
+unwriteable <- check.writeable("cellularities.csv")
+if(unwriteable) return(NULL)
+rm(unwriteable)
+
+if(testing) check.writeable("cellularities_test.csv")
+if(grid_output) {
+	unwriteable <- invisible(sapply(paste0("grid-cellularities/", image_names, " ", grid_no, "x", grid_no, " grid.csv"), FUN = check.writeable.grid))
+	if(unwriteable) return(NULL)
+	rm(unwriteable)
+}
 # ==========================================================================
 # Calculate cellularities
 # ==========================================================================

@@ -41,6 +41,11 @@ for (pkg in pkgs) {
 		)
 }
 
+options(repr.plot.width = 15, repr.plot.height = 20)
+
+# Functions =====================================================================
+
+
 check.dim <- function(lif){
 	twodim <- if(dim(lif)[3] == 2) TRUE else FALSE
 
@@ -57,7 +62,31 @@ extract.image <- function(lif_name) {
 	}
 	return(twodim_images)
 }
-options(repr.plot.width = 15, repr.plot.height = 20)
+
+check.writeable <- function(input_file) {
+	if(file.exists(input_file)){
+		try_cellularities <- read.csv(input_file)
+			try_cellularities <- suppressWarnings(try(write.csv(try_cellularities, input_file, row.names = FALSE), silent = TRUE))
+			if(!is.null(try_cellularities)) {
+				shinyalert(paste0(input_file, " is open"), "please close in order to write over it.\n
+					If you want to save the last run, please make a copy by another name", type = "error")
+				return(TRUE)
+			} else {return(FALSE)}
+		} else {return(FALSE)}
+}
+
+check.writeable.grid <- function(input_file) {
+	if(file.exists(input_file)){
+		try_cellularities <- read.csv(input_file)
+			try_cellularities <- suppressWarnings(try(write.table(try_cellularities, input_file, row.names = FALSE, col.names = FALSE, sep = ","), silent = TRUE))
+			if(!is.null(try_cellularities)) {
+				shinyalert(paste0(input_file, " is open"), "please close in order to write over it.\n
+					If you want to save the last run, please make a copy by another name", type = "error")
+				return(TRUE)
+			} else {return(FALSE)}
+		} else {return(FALSE)}
+}
+
 
 # Define UI ----
 ui <- fluidPage(
@@ -735,24 +764,15 @@ rv$image_names <- image_names
 # Check output file isn't open
 # ==========================================================================
 
-check.writeable <- function(input_file) {
-	if(file.exists(input_file)){
-		try_cellularities <- read.csv(input_file)
-			try_cellularities <- suppressWarnings(try(write.csv(try_cellularities, input_file), silent = TRUE))
-			if(!is.null(try_cellularities)) {
-				shinyalert(paste0(input_file, " is open"), "please close in order to write over it.\n
-					If you want to save the last run, please make a copy by another name", type = "error")
-				return(TRUE)
-			} else {return(FALSE)}
-		} else {return(FALSE)}
-}
-
 unwriteable <- check.writeable("cellularities.csv")
 if(unwriteable) return(NULL)
 rm(unwriteable)
 
-if(grid_output) invisible(sapply(paste0("grid-cellularities/", image_names, " ", grid_no, "x", grid_no, " grid.csv"), FUN = check.writeable))
-
+if(grid_output) {
+	unwriteable <- invisible(sapply(paste0("grid-cellularities/", image_names, " ", grid_no, "x", grid_no, " grid.csv"), FUN = check.writeable.grid))
+	if(unwriteable) return(NULL)
+	rm(unwriteable)
+}
 
 auto_cellularities <- data.frame(matrix(ncol = 3, nrow = length(image_names)))
 colnames(auto_cellularities) <- c("name", "cellularity", "high_compensation_flag")
@@ -1038,23 +1058,12 @@ rv$image_names <- image_names
 # Check output file isn't open
 # ==========================================================================
 
-check.writeable <- function(input_file) {
-	if(file.exists(input_file)){
-		try_cellularities <- read.csv(input_file)
-			try_cellularities <- suppressWarnings(try(write.csv(try_cellularities, input_file, row.names = FALSE), silent = TRUE))
-			if(!is.null(try_cellularities)) {
-				shinyalert(paste0(input_file, " is open"), "please close in order to write over it.\n
-					If you want to save the last run, please make a copy by another name", type = "error")
-				return(TRUE)
-			} else {return(FALSE)}
-		} else {return(FALSE)}
-}
 
 unwriteable <- check.writeable("cellularities.csv")
 if(unwriteable) return(NULL)
 rm(unwriteable)
 
-if(grid_output) invisible(sapply(paste0("grid-cellularities/", image_names, " ", grid_no, "x", grid_no, " grid.csv"), FUN = check.writeable))
+if(grid_output) invisible(sapply(paste0("grid-cellularities/", image_names, " ", grid_no, "x", grid_no, " grid.csv"), FUN = check.writeable.grid))
 
 
 if(file.exists("cellularities.csv")) {
