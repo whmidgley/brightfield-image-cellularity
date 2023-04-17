@@ -1,5 +1,5 @@
 if (Sys.info()["user"] == "william.midgley") {
-  setwd("C:/Users/william.midgley/OneDrive - Swansea University/Documents/projects/Amy's PhD/cell-analysis")
+  setwd("~/projects/Amy's PhD/cell-analysis")
 } else {
   #setwd("put your file path here and remove the # if run app doesn't work")
 }
