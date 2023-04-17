@@ -1,5 +1,5 @@
 if (Sys.info()["user"] == "william.midgley") {
-  setwd("~/projects/Amy's PhD/cell-analysis")
+  setwd("~/projects/brightfield-image-cellularity")
 } else {
   #setwd("put your file path here and remove the # if run app doesn't work")
 }
@@ -1002,7 +1002,7 @@ cellularities <- data.frame(matrix(nrow=length(images), ncol=2))
 colnames(cellularities) <- c("image_name", "cellularity")
 
 if(leica_snapshot_flg) {
-image_names <- sub('.+/(.+)', '\\1', images) %>% str_replace("Effectene.lif_", "") %>% str_replace(paste0("Snapshot1.", input_format), "") %>% str_replace(".lif_", " ")
+	image_names <- sub('.+/(.+)', '\\1', images) %>% str_replace("Effectene.lif_", "") %>% str_replace(paste0("Snapshot1.", input_format), "") %>% str_replace(".lif_", " ")
 } else {
 	image_names <- sub('.+/(.+)', '\\1', images) %>% str_replace("Effectene.lif_", "")
 }
@@ -1017,7 +1017,7 @@ rv$image_names <- image_names
 check.writeable <- function(input_file) {
 	if(file.exists(input_file)){
 		try_cellularities <- read.csv(input_file)
-			try_cellularities <- suppressWarnings(try(write.csv(try_cellularities, input_file), silent = TRUE))
+			try_cellularities <- suppressWarnings(try(write.csv(try_cellularities, input_file, row.names = FALSE), silent = TRUE))
 			if(!is.null(try_cellularities)) {
 				shinyalert(paste0(input_file, " is open"), "please close in order to write over it.\n
 					If you want to save the last run, please make a copy by another name", type = "error")
@@ -1033,7 +1033,11 @@ rm(unwriteable)
 if(grid_output) invisible(sapply(paste0("grid-cellularities/", image_names, " ", grid_no, "x", grid_no, " grid.csv"), FUN = check.writeable))
 
 
-auto_cellularities <- data.frame(matrix(ncol = 3, nrow = length(image_names)))
+if(file.exists("cellularities.csv")) {
+	auto_cellularities <- read.csv("cellularities.csv")
+	} else {
+	auto_cellularities <- data.frame(matrix(ncol = 3, nrow = length(image_names)))
+}
 colnames(auto_cellularities) <- c("name", "cellularity", "high_compensation_flag")
 
 save(image_names, file = "image_names.rdata")

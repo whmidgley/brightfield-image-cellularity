@@ -4,7 +4,7 @@
 # ==========================================================================
 
 if (Sys.info()["user"] == "william.midgley") {
-  setwd("~/projects/Amy's PhD/cell-analysis")
+  setwd("~/projects/brightfield-image-cellularity")
 } else {
   stop("Please add wd\n")
 }
