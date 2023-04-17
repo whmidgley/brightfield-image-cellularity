@@ -9,6 +9,7 @@ if (Sys.info()["user"] == "william.midgley") {
   stop("Please add wd\n")
 }
 
+suppressWarnings({
 file.remove("m_bf.rdata")
 file.remove("j.rdata")
 file.remove("image_names.rdata")
@@ -21,6 +22,7 @@ file.remove("grid_no.rdata")
 file.remove("change_grid_no.rdata")
 file.remove("flag_thresh.rdata")
 file.remove("desired_output_format.rdata")
+})
 
 # ==========================================================================
 # Clear environment
@@ -206,25 +208,43 @@ if(input_format == "lif") {
 
 lif_dirs <- list.files(path = "input-images", pattern = "lif$", recursive = TRUE, full.names = TRUE) 
 
+check.dim <- function(lif){
+	twodim <- if(dim(lif)[3] == 2) TRUE else FALSE
+
+	return(twodim)
+}
+
 extract.image <- function(lif_name) {
 	lif <- read.image(lif_name)
-	no_images <- length(lif)/2
-	lif_seq <- c(1:no_images)
-	
-	return(lif[lif_seq])
+	if(is.null(dim(lif))) {
+		twodims <- sapply(lif, FUN = check.dim)
+		twodim_images <- lif[twodims]
+	} else {
+		twodim_images <- lif
+	}
+	return(twodim_images)
 }
 
 image_names <- c()
 for(i in c(1:length(lif_dirs))) {
 	lif <- extract.image(lif_dirs[i])
-	for(j in c(1:length(lif))) {
-		image_frame <- lif[[j]]
+	if(is.null(dim(lif))) {
+		lif_length <- length(lif)
+	} else {
+		lif_length <- 1
+	}
+	for(j in c(1:lif_length)) {
+		if(lif_length == 1) {
+			image_frame <- lif
+		} else {
+			image_frame <- lif[[j]]
+		}
 		image <- array(dim = c(dim(image_frame)[c(1:2)], 3))
 		image[,,1] <- image_frame[,,2]
 		image[,,2] <- image_frame[,,2]
 		image[,,3] <- image_frame[,,2]
 		image <- Image(image, colormode = "Color")
-		row_num <- length(lif)*(i-1) + j 
+		row_num <- lif_length*(i-1) + j 
 		image_names[row_num] <- c(paste0(sub('.+/(.+)', '\\1', lif_dirs[i] %>% str_replace(".lif", "")), " Image ", j))
 		assign(paste0("image_", image_names[row_num] %>% str_replace_all(" ", "_")), image)
 	}
