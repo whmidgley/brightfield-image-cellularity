@@ -782,7 +782,7 @@ rm(unwriteable)
 
 if(grid_output) {
 	unwriteable <- invisible(sapply(paste0("grid-cellularities/", image_names, " ", grid_no, "x", grid_no, " grid.csv"), FUN = check.writeable.grid))
-	if(unwriteable) return(NULL)
+	if(unwriteable %>% vector.OR()) return(NULL)
 	rm(unwriteable)
 }
 
