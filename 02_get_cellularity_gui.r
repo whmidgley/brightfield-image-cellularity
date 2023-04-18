@@ -1,10 +1,8 @@
 if (Sys.info()["user"] == "william.midgley") {
   setwd("~/projects/brightfield-image-cellularity")
-} else {
-  #setwd("Add working directory here and remove #. Also remove stop("...")")
-  stop("Add working directory")
-}
-
+} else if(Sys.info()["user"] == "molca") {
+  setwd("C:/Users/amylr/OneDrive - Swansea University/ALR_PhD/Image Analysis Colaboration/brightfield-image-cellularity")
+} else {stop("please add wd")}
 rm(list = ls())
 
 if(!is.null(names(sessionInfo()$otherPkgs))) {
