@@ -226,6 +226,7 @@ extract.image <- function(lif_name) {
 }
 
 image_names <- c()
+lif_lengths <- c()
 for(i in c(1:length(lif_dirs))) {
 	lif <- extract.image(lif_dirs[i])
 	if(is.null(dim(lif))) {
@@ -233,6 +234,7 @@ for(i in c(1:length(lif_dirs))) {
 	} else {
 		lif_length <- 1
 	}
+	lif_lengths[i] <- lif_length
 	for(j in c(1:lif_length)) {
 		if(lif_length == 1) {
 			image_frame <- lif
@@ -244,7 +246,11 @@ for(i in c(1:length(lif_dirs))) {
 		image[,,2] <- image_frame[,,2]
 		image[,,3] <- image_frame[,,2]
 		image <- Image(image, colormode = "Color")
-		row_num <- lif_length*(i-1) + j 
+		if(i == 1) {
+			row_num <- j
+		} else {
+			row_num <- sum(lif_lengths[1:(i-1)]) + j
+		}
 		image_names[row_num] <- c(paste0(sub('.+/(.+)', '\\1', lif_dirs[i] %>% str_replace(".lif", "")), " Image ", j))
 		assign(paste0("image_", image_names[row_num] %>% str_replace_all(" ", "_")), image)
 	}
@@ -296,16 +302,11 @@ check.writeable.grid <- function(input_file) {
 		} else {return(FALSE)}
 }
 
-unwriteable <- check.writeable("cellularities.csv")
-if(unwriteable) return(NULL)
-rm(unwriteable)
+check.writeable("cellularities.csv")
 
 if(testing) check.writeable("cellularities_test.csv")
-if(grid_output) {
-	unwriteable <- invisible(sapply(paste0("grid-cellularities/", image_names, " ", grid_no, "x", grid_no, " grid.csv"), FUN = check.writeable.grid))
-	if(unwriteable) return(NULL)
-	rm(unwriteable)
-}
+if(grid_output) invisible(sapply(paste0("grid-cellularities/", image_names, " ", grid_no, "x", grid_no, " grid.csv"), FUN = check.writeable.grid))
+
 # ==========================================================================
 # Calculate cellularities
 # ==========================================================================

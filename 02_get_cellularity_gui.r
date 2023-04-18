@@ -498,6 +498,7 @@ lif_dirs <- list.files(path = "input-images", pattern = "lif$", recursive = TRUE
 
 
 image_names <- c()
+lif_lengths <- c()
 for(i in c(1:length(lif_dirs))) {
 	lif <- extract.image(lif_dirs[i])
 	if(is.null(dim(lif))) {
@@ -505,6 +506,7 @@ for(i in c(1:length(lif_dirs))) {
 	} else {
 		lif_length <- 1
 	}
+	lif_lengths[i] <- lif_length
 	for(j in c(1:lif_length)) {
 		if(lif_length == 1) {
 			image_frame <- lif
@@ -516,7 +518,11 @@ for(i in c(1:length(lif_dirs))) {
 		image[,,2] <- image_frame[,,2]
 		image[,,3] <- image_frame[,,2]
 		image <- Image(image, colormode = "Color")
-		row_num <- lif_length*(i-1) + j 
+		if(i == 1) {
+			row_num <- j
+		} else {
+			row_num <- sum(lif_lengths[1:(i-1)]) + j
+		}
 		image_names[row_num] <- c(paste0(sub('.+/(.+)', '\\1', lif_dirs[i] %>% str_replace(".lif", "")), " Image ", j))
 		assign(paste0("image_", image_names[row_num] %>% str_replace_all(" ", "_")), image)
 	}
@@ -719,6 +725,7 @@ if(input_format == "lif") {
 lif_dirs <- list.files(path = "input-images", pattern = "lif$", recursive = TRUE, full.names = TRUE) 
 
 image_names <- c()
+lif_lengths <- c()
 for(i in c(1:length(lif_dirs))) {
 	lif <- extract.image(lif_dirs[i])
 	if(is.null(dim(lif))) {
@@ -726,6 +733,7 @@ for(i in c(1:length(lif_dirs))) {
 	} else {
 		lif_length <- 1
 	}
+	lif_lengths[i] <- lif_length
 	for(j in c(1:lif_length)) {
 		if(lif_length == 1) {
 			image_frame <- lif
@@ -737,7 +745,11 @@ for(i in c(1:length(lif_dirs))) {
 		image[,,2] <- image_frame[,,2]
 		image[,,3] <- image_frame[,,2]
 		image <- Image(image, colormode = "Color")
-		row_num <- lif_length*(i-1) + j 
+		if(i == 1) {
+			row_num <- j
+		} else {
+			row_num <- sum(lif_lengths[1:(i-1)]) + j
+		}
 		image_names[row_num] <- c(paste0(sub('.+/(.+)', '\\1', lif_dirs[i] %>% str_replace(".lif", "")), " Image ", j))
 		assign(paste0("image_", image_names[row_num] %>% str_replace_all(" ", "_")), image)
 	}
@@ -1013,6 +1025,7 @@ lif_dirs <- list.files(path = "input-images", pattern = "lif$", recursive = TRUE
 
 
 image_names <- c()
+lif_lengths <- c()
 for(i in c(1:length(lif_dirs))) {
 	lif <- extract.image(lif_dirs[i])
 	if(is.null(dim(lif))) {
@@ -1020,6 +1033,7 @@ for(i in c(1:length(lif_dirs))) {
 	} else {
 		lif_length <- 1
 	}
+	lif_lengths[i] <- lif_length
 	for(j in c(1:lif_length)) {
 		if(lif_length == 1) {
 			image_frame <- lif
@@ -1031,7 +1045,11 @@ for(i in c(1:length(lif_dirs))) {
 		image[,,2] <- image_frame[,,2]
 		image[,,3] <- image_frame[,,2]
 		image <- Image(image, colormode = "Color")
-		row_num <- lif_length*(i-1) + j 
+		if(i == 1) {
+			row_num <- j
+		} else {
+			row_num <- sum(lif_lengths[1:(i-1)]) + j
+		}
 		image_names[row_num] <- c(paste0(sub('.+/(.+)', '\\1', lif_dirs[i] %>% str_replace(".lif", "")), " Image ", j))
 		assign(paste0("image_", image_names[row_num] %>% str_replace_all(" ", "_")), image)
 	}
