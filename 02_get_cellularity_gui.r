@@ -1,7 +1,8 @@
 if (Sys.info()["user"] == "william.midgley") {
   setwd("~/projects/brightfield-image-cellularity")
 } else {
-  #setwd("put your file path here and remove the # if run app doesn't work")
+  #setwd("Add working directory here and remove #. Also remove stop("...")")
+  stop("Add working directory")
 }
 
 rm(list = ls())
@@ -51,7 +52,7 @@ check.dim <- function(lif){
 
 	return(twodim)
 }
-
+ 
 extract.image <- function(lif_name) {
 	lif <- read.image(lif_name)
 	if(is.null(dim(lif))) {
@@ -65,7 +66,9 @@ extract.image <- function(lif_name) {
 
 check.writeable <- function(input_file) {
 	if(file.exists(input_file)){
-		try_cellularities <- read.csv(input_file)
+		try_empty <- suppressWarnings(try(read.csv(input_file)))
+		if(is.null(try_empty)) {
+			try_cellularities <- read.csv(input_file)
 			try_cellularities <- suppressWarnings(try(write.csv(try_cellularities, input_file, row.names = FALSE), silent = TRUE))
 			if(!is.null(try_cellularities)) {
 				shinyalert(paste0(input_file, " is open"), "please close in order to write over it.\n
@@ -73,11 +76,14 @@ check.writeable <- function(input_file) {
 				return(TRUE)
 			} else {return(FALSE)}
 		} else {return(FALSE)}
+	} else {return(FALSE)}
 }
 
 check.writeable.grid <- function(input_file) {
 	if(file.exists(input_file)){
-		try_cellularities <- read.csv(input_file)
+		try_empty <- suppressWarnings(try(read.csv(input_file)))
+		if(is.null(try_empty)) {
+			try_cellularities <- read.csv(input_file)
 			try_cellularities <- suppressWarnings(try(write.table(try_cellularities, input_file, row.names = FALSE, col.names = FALSE, sep = ","), silent = TRUE))
 			if(!is.null(try_cellularities)) {
 				shinyalert(paste0(input_file, " is open"), "please close in order to write over it.\n
@@ -85,6 +91,7 @@ check.writeable.grid <- function(input_file) {
 				return(TRUE)
 			} else {return(FALSE)}
 		} else {return(FALSE)}
+	} else {return(FALSE)}
 }
 
 

@@ -6,7 +6,8 @@
 if (Sys.info()["user"] == "william.midgley") {
   setwd("~/projects/brightfield-image-cellularity")
 } else {
-  stop("Please add wd\n")
+  #setwd("Add working directory here and remove #. Also remove stop("...")")
+  stop("Add working directory")
 }
 
 suppressWarnings({
@@ -268,7 +269,7 @@ image_names <- sub('.+/(.+)', '\\1', images) %>% str_replace("Effectene.lif_", "
 	image_names <- sub('.+/(.+)', '\\1', images) %>% str_replace("Effectene.lif_", "")
 }
 }
-
+ 
 if(testing){
 	# only test images I have the human counterpart for
 	human_cellularities <- read.csv("human_cellularities_fixed.csv")[,c(1:2)]
@@ -279,27 +280,35 @@ if(testing){
 # ==========================================================================
 # Check output file isn't open
 # ==========================================================================
+
 check.writeable <- function(input_file) {
 	if(file.exists(input_file)){
-		try_cellularities <- read.csv(input_file)
+		try_empty <- suppressWarnings(try(read.csv(input_file)))
+		if(is.null(try_empty)) {
+			try_cellularities <- read.csv(input_file)
 			try_cellularities <- suppressWarnings(try(write.csv(try_cellularities, input_file, row.names = FALSE), silent = TRUE))
 			if(!is.null(try_cellularities)) {
 				stop(paste0(input_file, " is open, please close in order to write over it.\n
 					If you want to save the last run, please make another copy by another name"))
-			}
-		}
+				return(TRUE)
+			} else {return(FALSE)}
+		} else {return(FALSE)}
+	} else {return(FALSE)}
 }
 
 check.writeable.grid <- function(input_file) {
 	if(file.exists(input_file)){
-		try_cellularities <- read.csv(input_file)
+		try_empty <- suppressWarnings(try(read.csv(input_file)))
+		if(is.null(try_empty)) {
+			try_cellularities <- read.csv(input_file)
 			try_cellularities <- suppressWarnings(try(write.table(try_cellularities, input_file, row.names = FALSE, col.names = FALSE, sep = ","), silent = TRUE))
 			if(!is.null(try_cellularities)) {
-				shinyalert(paste0(input_file, " is open"), "please close in order to write over it.\n
-					If you want to save the last run, please make a copy by another name", type = "error")
+				stop(paste0(input_file, " is open, please close in order to write over it.\n
+					If you want to save the last run, please make another copy by another name"))
 				return(TRUE)
 			} else {return(FALSE)}
 		} else {return(FALSE)}
+	} else {return(FALSE)}
 }
 
 check.writeable("cellularities.csv")
