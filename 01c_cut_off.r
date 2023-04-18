@@ -36,14 +36,13 @@ m_bf_segmented <- xe
 imgE <- m_bf_segmented
 
 cat("Shrinking spread from blurring\n")
-if(shrink) {
 
-  imgE <- gblur(imgE, blur*nrow(imgE))
-  
-  imgE <- matrix(case_when(matrix(imgE) < shrink_cutoff ~ 0, TRUE ~ 1), ncol = ncol(imgE)) %>% Image(colormode = "Color")
-  
-  xe <- imgE
-}
+imgE <- gblur(imgE, blur*nrow(imgE))
+
+imgE <- matrix(case_when(matrix(imgE) < shrink_cutoff ~ 0, TRUE ~ 1), ncol = ncol(imgE)) %>% Image(colormode = "Color")
+
+xe <- imgE
+
 plot(xe)
 # ==========================================================================
 # Edges

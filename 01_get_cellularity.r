@@ -5,10 +5,9 @@
 
 if (Sys.info()["user"] == "william.midgley") {
   setwd("~/projects/brightfield-image-cellularity")
-} else {
-  #setwd("Add working directory here and remove #. Also remove stop("...")")
-  stop("Add working directory")
-}
+} else if(Sys.info()["user"] == "molca") {
+  setwd("C:/Users/amylr/OneDrive - Swansea University/ALR_PhD/Image Analysis Colaboration/brightfield-image-cellularity")
+} else {stop("please add wd")}
 
 suppressWarnings({
 file.remove("m_bf.rdata")
@@ -84,7 +83,6 @@ brightness_mean <- 0.3
 cut_off <- 0.08
 
 # 0.95 looks good
-shrink <- TRUE
 shrink_cutoff <- 0.95
 
 # Do you want the cellularity to be outputted as a grid?

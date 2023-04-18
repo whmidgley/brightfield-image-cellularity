@@ -94,7 +94,6 @@ check.writeable.grid <- function(input_file) {
 	} else {return(FALSE)}
 }
 
-shrink <- TRUE
 
 # Define UI ----
 ui <- fluidPage(
