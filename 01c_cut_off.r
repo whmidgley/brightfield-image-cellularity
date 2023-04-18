@@ -63,6 +63,8 @@ prop_background <-
  
 computer_cellularity <- ((1-prop_background)-(1-prop_background_edge)*error_factor)*100
 
+if(computer_cellularity < 0) computer_cellularity <- 0
+
 cat("cellularity is", round(computer_cellularity),"% as defined by the computer\n")
 
 m_bf_overlay <- array(dim = dim(m_bf))

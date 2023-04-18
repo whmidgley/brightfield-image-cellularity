@@ -298,9 +298,9 @@ check.writeable <- function(input_file) {
 
 check.writeable.grid <- function(input_file) {
 	if(file.exists(input_file)){
-		try_empty <- suppressWarnings(try(read.csv(input_file)))
+		try_empty <- suppressWarnings(try(read.csv(input_file, header = FALSE)))
 		if(is.null(try_empty)) {
-			try_cellularities <- read.csv(input_file)
+			try_cellularities <- read.csv(input_file, header = FALSE)
 			try_cellularities <- suppressWarnings(try(write.table(try_cellularities, input_file, row.names = FALSE, col.names = FALSE, sep = ","), silent = TRUE))
 			if(!is.null(try_cellularities)) {
 				stop(paste0(input_file, " is open, please close in order to write over it.\n
