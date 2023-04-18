@@ -94,6 +94,7 @@ check.writeable.grid <- function(input_file) {
 	} else {return(FALSE)}
 }
 
+shrink <- TRUE
 
 # Define UI ----
 ui <- fluidPage(
@@ -147,11 +148,11 @@ ui <- fluidPage(
       ),
       fluidRow(
       column(10, style = "justify-content:center;",
-      sliderInput(inputId = "error_factor",
-                  label = "Proportion of perimeter of segmented area by which cellularity is reduced (Increase alongside blur):",
-                  min = 0.75,
-                  max = 2.50,
-                  value = 1.65)
+      sliderInput(inputId = "shrink_cutoff",
+                  label = "Cutoff for shrink (1 = all cellular area is removed):",
+                  min = 0.8,
+                  max = 1,
+                  value = 0.95)
       ),
       column(1, style = "justify-content:center; padding-top:57px;",
       actionButton("reset_ef", "Reset", style = "padding:4px; font-size:90%")
@@ -281,7 +282,7 @@ rv$done <- 0
     updateSliderInput(session,"cut_off", value = 0.08)
   })
   observeEvent(input$reset_ef,{
-    updateSliderInput(session,"error_factor", value = 1.65)
+    updateSliderInput(session,"shrink_cutoff", value = 0.95)
   })
   observeEvent(input$reset_ft,{
     updateSliderInput(session,"flag_thresh", value = 15)
@@ -308,7 +309,7 @@ rv$done <- 0
     updateSliderInput(session, "blur", value = 0.003)
     updateSliderInput(session, "brightness_mean", value = 0.3)
     updateSliderInput(session, "cut_off", value = 0.08)
-    updateSliderInput(session, "error_factor", value = 1.65)
+    updateSliderInput(session, "shrink_cutoff", value = 0.95)
     updateSliderInput(session,"flag_thresh", value = 15)
     updateNumericInput(session, "grid_no", value = 4)
     updateSwitchInput(session, "grid_output", value = FALSE)
@@ -586,8 +587,8 @@ blur <- input$blur
 brightness_mean <- input$brightness_mean
 # I recomend between 0.05 and 0.1
 cut_off <- input$cut_off
-# I recomend between 0.75 and 1.75
-error_factor <- input$error_factor
+# I recomend between 0.95
+shrink_cutoff <- input$shrink_cutoff
 # Do you want the cellularity to be outputted as a grid?
 grid_output <- input$grid_output
 # whatever you want (provided it's below ~600)
@@ -604,7 +605,7 @@ desired_output_format <- input$desired_output_format
 if(!exists("blur")) blur <- 0.003
 if(!exists("brightness_mean")) brightness_mean <- 0.3
 if(!exists("cut_off")) cut_off <- 0.08
-if(!exists("error_factor")) error_factor <- 1.65
+if(!exists("shrink_cutoff")) shrink_cutoff <- 0.95
 if(!exists("grid_no")) grid_no <- 4
 if(!exists("flag_thresh")) flag_thresh <- 15
 if(!exists("grid_output")) grid_output <- FALSE
@@ -615,7 +616,7 @@ if(!exists("desired_output_format")) desired_output_format <- "tif"
 if(is.null(blur)) blur <- 0.003
 if(is.null(brightness_mean)) brightness_mean <- 0.3
 if(is.null(cut_off)) cut_off <- 0.08
-if(is.null(error_factor)) error_factor <- 1.65
+if(is.null(shrink_cutoff)) shrink_cutoff <- 0.95
 if(is.null(grid_no)) grid_no <- 4
 if(is.null(flag_thresh)) flag_thresh <- 15
 if(is.null(grid_output)) grid_output <- FALSE
@@ -626,7 +627,7 @@ if(!grid_output & change_grid_no) shinyalert("grid_output is FALSE but change_gr
 save(blur, file = "blur.rdata")
 save(brightness_mean, file = "brightness_mean.rdata")
 save(cut_off, file = "cut_off.rdata")
-save(error_factor, file = "error_factor.rdata")
+save(shrink_cutoff, file = "shrink_cutoff.rdata")
 save(grid_output, file = "grid_output.rdata")
 save(grid_no, file = "grid_no.rdata")
 save(change_grid_no, file = "change_grid_no.rdata")
@@ -635,7 +636,7 @@ save(desired_output_format, file = "desired_output_format.rdata")
 
 cat("blur is ", blur, "\n")
 cat("brightness_mean is ", brightness_mean, "\n")
-cat("error_factor is ", error_factor, "\n")
+cat("shrink_cutoff is ", shrink_cutoff, "\n")
 cat("grid_output is ", grid_output, "\n")
 cat("grid_no is ", grid_no, "\n")
 cat("change_grid_no is ", change_grid_no, "\n")
@@ -852,7 +853,7 @@ if(grid_output) {
 source("01d_by_grid.r")
 }
 if(!(change_grid_no & grid_output)) {
-auto_cellularities[j,] <- c(image_names[j], print(computer_cellularity), case_when((1-prop_background_edge)*error_factor*100 > flag_thresh ~ "CHECK OUTLINE",
+auto_cellularities[j,] <- c(image_names[j], print(computer_cellularity), case_when((1-prop_background_edge)*100 > flag_thresh ~ "CHECK OUTLINE",
 																									TRUE ~ "image normal"))
 }
 file.remove("m_bf.rdata")
@@ -865,7 +866,7 @@ file.remove("image_names.rdata")
 file.remove("blur.rdata")
 file.remove("brightness_mean.rdata")
 file.remove("cut_off.rdata")
-file.remove("error_factor.rdata")
+file.remove("shrink_cutoff.rdata")
 file.remove("grid_output.rdata")
 file.remove("grid_no.rdata")
 file.remove("change_grid_no.rdata")
@@ -895,7 +896,7 @@ brightness_mean <- input$brightness_mean
 # I recomend between 0.05 and 0.1
 cut_off <- input$cut_off
 # I recomend between 0.75 and 1.75
-error_factor <- input$error_factor
+shrink_cutoff <- input$shrink_cutoff
 # Do you want the cellularity to be outputted as a grid?
 grid_output <- input$grid_output
 # whatever you want (provided it's below ~600)
@@ -912,7 +913,7 @@ desired_output_format <- input$desired_output_format
 if(!exists("blur")) blur <- 0.003
 if(!exists("brightness_mean")) brightness_mean <- 0.3
 if(!exists("cut_off")) cut_off <- 0.08
-if(!exists("error_factor")) error_factor <- 1.65
+if(!exists("shrink_cutoff")) shrink_cutoff <- 0.95
 if(!exists("grid_no")) grid_no <- 4
 if(!exists("flag_thresh")) flag_thresh <- 15
 if(!exists("grid_output")) grid_output <- FALSE
@@ -923,7 +924,7 @@ if(!exists("desired_output_format")) desired_output_format <- "tif"
 if(is.null(blur)) blur <- 0.003
 if(is.null(brightness_mean)) brightness_mean <- 0.3
 if(is.null(cut_off)) cut_off <- 0.08
-if(is.null(error_factor)) error_factor <- 1.65
+if(is.null(shrink_cutoff)) shrink_cutoff <- 0.95
 if(is.null(grid_no)) grid_no <- 4
 if(is.null(flag_thresh)) flag_thresh <- 15
 if(is.null(grid_output)) grid_output <- FALSE
@@ -934,7 +935,7 @@ if(!grid_output & change_grid_no) shinyalert("grid_output is FALSE but change_gr
 save(blur, file = "blur.rdata")
 save(brightness_mean, file = "brightness_mean.rdata")
 save(cut_off, file = "cut_off.rdata")
-save(error_factor, file = "error_factor.rdata")
+save(shrink_cutoff, file = "shrink_cutoff.rdata")
 save(grid_output, file = "grid_output.rdata")
 save(grid_no, file = "grid_no.rdata")
 save(change_grid_no, file = "change_grid_no.rdata")
@@ -943,7 +944,7 @@ save(desired_output_format, file = "desired_output_format.rdata")
 
 cat("blur is ", blur, "\n")
 cat("brightness_mean is ", brightness_mean, "\n")
-cat("error_factor is ", error_factor, "\n")
+cat("shrink_cutoff is ", shrink_cutoff, "\n")
 cat("grid_output is ", grid_output, "\n")
 cat("grid_no is ", grid_no, "\n")
 cat("change_grid_no is ", change_grid_no, "\n")
@@ -1156,7 +1157,7 @@ if(grid_output) {
 source("01d_by_grid.r")
 }
 if(!(change_grid_no & grid_output)) {
-auto_cellularities[j,] <- c(image_names[j], print(computer_cellularity), case_when((1-prop_background_edge)*error_factor*100 > flag_thresh ~ "CHECK OUTLINE",
+auto_cellularities[j,] <- c(image_names[j], print(computer_cellularity), case_when((1-prop_background_edge)*100 > flag_thresh ~ "CHECK OUTLINE",
 																									TRUE ~ "image normal"))
 }
 file.remove("m_bf.rdata")
@@ -1168,7 +1169,7 @@ file.remove("image_names.rdata")
 file.remove("blur.rdata")
 file.remove("brightness_mean.rdata")
 file.remove("cut_off.rdata")
-file.remove("error_factor.rdata")
+file.remove("shrink_cutoff.rdata")
 file.remove("grid_output.rdata")
 file.remove("grid_no.rdata")
 file.remove("change_grid_no.rdata")

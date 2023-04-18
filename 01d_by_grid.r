@@ -4,7 +4,7 @@ if(file.exists("image_names.rdata")) load("image_names.rdata")
 if(file.exists("blur.rdata")) load("blur.rdata")
 if(file.exists("brightness_mean.rdata")) load("brightness_mean.rdata")
 if(file.exists("cut_off.rdata")) load("cut_off.rdata")
-if(file.exists("error_factor.rdata")) load("error_factor.rdata")
+if(file.exists("shrink_cutoff.rdata")) load("shrink_cutoff.rdata")
 if(file.exists("grid_output.rdata")) load("grid_output.rdata")
 if(file.exists("grid_no.rdata")) load("grid_no.rdata")
 if(file.exists("change_grid_no.rdata")) load("change_grid_no.rdata")
@@ -47,7 +47,7 @@ calc.cellularity <- function(mat_seg, mat_edge) {
     	length() / nrow(mat_seg)^2
 
     comp_cell <-
-    	((1-prop_background_seg)-(1-prop_background_edge)*error_factor)*100
+    	(1-prop_background_seg)*100
     return(comp_cell)
 }
 

@@ -29,6 +29,26 @@ xe <- matrix(xe, ncol = ncol(m_bf)) %>% Image()
 
 m_bf_segmented <- xe
 
+# ==========================================================================
+# Try shrinking
+# ==========================================================================
+
+imgE <- m_bf_segmented
+
+cat("Shrinking spread from blurring\n")
+if(shrink) {
+
+  imgE <- gblur(imgE, blur*nrow(imgE))
+  
+  imgE <- matrix(case_when(matrix(imgE) < shrink_cutoff ~ 0, TRUE ~ 1), ncol = ncol(imgE)) %>% Image(colormode = "Color")
+  
+  xe <- imgE
+}
+plot(xe)
+# ==========================================================================
+# Edges
+# ==========================================================================
+
 hfilt <- matrix(c(1, 2, 1, 0, 0, 0, -1, -2, -1), nrow = 3) # sobel
 
 # rotate horizontal filter to obtain vertical filter
@@ -61,7 +81,7 @@ prop_background <-
     length() / length(d_bf_cut_off)
 
  
-computer_cellularity <- ((1-prop_background)-(1-prop_background_edge)*error_factor)*100
+computer_cellularity <- (1-prop_background)*100
 
 if(computer_cellularity < 0) computer_cellularity <- 0
 

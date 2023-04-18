@@ -17,7 +17,7 @@ file.remove("image_names.rdata")
 file.remove("blur.rdata")
 file.remove("brightness_mean.rdata")
 file.remove("cut_off.rdata")
-file.remove("error_factor.rdata")
+file.remove("shrink_cutoff.rdata")
 file.remove("grid_output.rdata")
 file.remove("grid_no.rdata")
 file.remove("change_grid_no.rdata")
@@ -83,8 +83,9 @@ brightness_mean <- 0.3
 # I recomend between 0.05 and 0.1
 cut_off <- 0.08
 
-# I recomend between 0.75 and 1.75
-error_factor <- 1.65
+# 0.95 looks good
+shrink <- TRUE
+shrink_cutoff <- 0.95
 
 # Do you want the cellularity to be outputted as a grid?
 grid_output <- FALSE
@@ -106,7 +107,7 @@ testing <- FALSE
 if(!exists("blur")) blur <- 0.003
 if(!exists("brightness_mean")) brightness_mean <- 0.3
 if(!exists("cut_off")) cut_off <- 0.08
-if(!exists("error_factor")) error_factor <- 1.65
+if(!exists("shrink_cutoff")) shrink_cutoff <- 0.95
 if(!exists("grid_no")) grid_no <- 4
 if(!exists("flag_thresh")) flag_thresh <- 15
 if(!exists("testing")) testing <- FALSE
@@ -354,7 +355,7 @@ if(grid_output) {
 source("01d_by_grid.r")
 }
 if(!(change_grid_no & grid_output)) {
-auto_cellularities[j,] <- c(image_names[j], print(computer_cellularity), case_when((1-prop_background_edge)*error_factor*100 > flag_thresh ~ "CHECK OUTLINE",
+auto_cellularities[j,] <- c(image_names[j], print(computer_cellularity), case_when((1-prop_background_edge)*100 > flag_thresh ~ "CHECK OUTLINE",
 																									TRUE ~ "image normal"))
 }
 }
