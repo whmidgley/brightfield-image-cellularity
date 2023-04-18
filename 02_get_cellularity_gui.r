@@ -67,7 +67,7 @@ extract.image <- function(lif_name) {
 check.writeable <- function(input_file) {
 	if(file.exists(input_file)){
 		try_empty <- suppressWarnings(try(read.csv(input_file)))
-		if(is.null(try_empty)) {
+		if(!(summary(try_empty)[2] == "try-error")) {
 			try_cellularities <- read.csv(input_file)
 			try_cellularities <- suppressWarnings(try(write.csv(try_cellularities, input_file, row.names = FALSE), silent = TRUE))
 			if(!is.null(try_cellularities)) {
@@ -82,7 +82,7 @@ check.writeable <- function(input_file) {
 check.writeable.grid <- function(input_file) {
 	if(file.exists(input_file)){
 		try_empty <- suppressWarnings(try(read.csv(input_file, header = FALSE)))
-		if(is.null(try_empty)) {
+		if(!(summary(try_empty)[2] == "try-error")) {
 			try_cellularities <- read.csv(input_file, header = FALSE)
 			try_cellularities <- suppressWarnings(try(write.table(try_cellularities, input_file, row.names = FALSE, col.names = FALSE, sep = ","), silent = TRUE))
 			if(!is.null(try_cellularities)) {
@@ -246,7 +246,12 @@ ui <- fluidPage(
     	)
     ),
     fluidRow(
+    	column(6,
     	htmlOutput("choose_image")
+    	),
+    	column(5,
+    	htmlOutput("show_cellularity")
+    	)
     	)
     )
     )
@@ -366,6 +371,17 @@ rv$done <- 0
   			plot()
   		}
   	})
+    output$show_cellularity <- renderText({
+    	if(rv$done > 0) {
+				if(file.exists("cellularities.csv")) {
+					try_empty <- suppressWarnings(try(read.csv("cellularities.csv")))
+					if(!(summary(try_empty)[2] == "try-error")) {
+						cells <- read.csv("cellularities.csv")
+						paste0("<B>Cellularity: </B>", round(cells[rv$image_no, 2], 1), "%")
+					}
+				}
+    	}
+    	})
 
 output$original_label <- renderText(if(rv$done > 0) "Original image")
 output$normalised_label <- renderText(if(rv$done > 0) "Normalised image")
