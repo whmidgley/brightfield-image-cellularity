@@ -7,7 +7,7 @@ This program was primerily written for the use of a research group which use Lei
 
 Images are normalised, before edge detection, and blurring. Then a cutoff is applied to remove the background, and all small objects (smaller than a cell) are removed. Blurring and artifacts of imaging can sometimes cause the program to overestimate cellular area. Therefore, a factor of the circumference of cellular area is subtracted from the final cellularity. 
 
-When compared to humans on 99 brightfield images, the model had an error of 
+When compared to humans on 99 brightfield images, the model had a mean square error of 6.97
 N.B. This Git repo is a 'clean' version of a private repo, so sometimes I may have referred to files which do not exist. Removed files pertain to images 
 which I don't have permission to make public. This is also why there are no branches in the git history.
 
