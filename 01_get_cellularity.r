@@ -6,7 +6,7 @@
 if (Sys.info()["user"] == "william.midgley") {
   setwd("~/projects/brightfield-image-cellularity")
 } else if(Sys.info()["user"] == "molca") {
-  setwd("C:/Users/amylr/OneDrive - Swansea University/ALR_PhD/Image Analysis Colaboration/brightfield-image-cellularity")
+  setwd("C:/Users/molca/OneDrive - Swansea University/ALR_PhD/Image Analysis Colaboration/brightfield-image-cellularity")
 } else {stop("please add wd")}
 
 suppressWarnings({
