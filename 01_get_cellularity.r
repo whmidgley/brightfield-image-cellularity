@@ -1,73 +1,5 @@
 
-# ==========================================================================
-# Setwd
-# ==========================================================================
-
-if (Sys.info()["user"] == "william.midgley") {
-  setwd("~/projects/brightfield-image-cellularity")
-} else if(Sys.info()["user"] == "molca") {
-  setwd("C:/Users/molca/OneDrive - Swansea University/ALR_PhD/Image Analysis Colaboration/brightfield-image-cellularity")
-} else {stop("please add wd")}
-
-suppressWarnings({
-file.remove("m_bf.rdata")
-file.remove("j.rdata")
-file.remove("image_names.rdata")
-file.remove("blur.rdata")
-file.remove("brightness_mean.rdata")
-file.remove("cut_off.rdata")
-file.remove("shrink_cutoff.rdata")
-file.remove("grid_output.rdata")
-file.remove("grid_no.rdata")
-file.remove("change_grid_no.rdata")
-file.remove("flag_thresh.rdata")
-file.remove("desired_output_format.rdata")
-})
-
-# ==========================================================================
-# Clear environment
-# ==========================================================================
-
-rm(list = ls())
-
-if(!is.null(names(sessionInfo()$otherPkgs))) {
-	suppressWarnings(
-		invisible(
-			lapply(
-				paste0("package:",
-					names(sessionInfo()$otherPkgs)),
-					detach,
-					character.only = TRUE,
-					unload = TRUE
-					)
-			)
-	)
-}
-# ==========================================================================
-# Load
-# ==========================================================================
-
-pkgs <- c(
-	"tidyverse",
-	"beepr",
-	"EBImage",
-	"RBioFormats",
-	"readr",
-	"stringr"
-	)
-
-for (pkg in pkgs) {
-	suppressWarnings(
-		suppressPackageStartupMessages(
-			library(pkg, character.only = TRUE)
-			)
-		)
-}
-
-options(repr.plot.width = 15, repr.plot.height = 20)
-
-
-
+source("r_clear_and_load.r")
 
 # ==========================================================================
 # Variables
@@ -214,7 +146,7 @@ check.dim <- function(lif){
 	return(twodim)
 }
 
-extract.image <- function(lif_name) {
+extract.bf <- function(lif_name) {
 	lif <- read.image(lif_name)
 	if(is.null(dim(lif))) {
 		twodims <- sapply(lif, FUN = check.dim)
@@ -228,7 +160,7 @@ extract.image <- function(lif_name) {
 image_names <- c()
 lif_lengths <- c()
 for(i in c(1:length(lif_dirs))) {
-	lif <- extract.image(lif_dirs[i])
+	lif <- extract.bf(lif_dirs[i])
 	if(is.null(dim(lif))) {
 		lif_length <- length(lif)
 	} else {

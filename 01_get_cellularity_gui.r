@@ -1,96 +1,5 @@
-if (Sys.info()["user"] == "william.midgley") {
-  setwd("~/projects/brightfield-image-cellularity")
-} else if(Sys.info()["user"] == "molca") {
-  setwd("C:/Users/molca/OneDrive - Swansea University/ALR_PhD/Image Analysis Colaboration/brightfield-image-cellularity")
-} else {stop("please add wd")}
-rm(list = ls())
 
-if(!is.null(names(sessionInfo()$otherPkgs))) {
-	suppressWarnings(
-		invisible(
-			lapply(
-				paste0("package:",
-					names(sessionInfo()$otherPkgs)),
-					detach,
-					character.only = TRUE,
-					unload = TRUE
-					)
-			)
-	)
-}
-
-pkgs <- c(
-	"tidyverse",
-	"beepr",
-	"EBImage",
-	"RBioFormats",
-	"readr",
-	"stringr",
-	"shiny",
-	"shinyjs",
-	"shinyWidgets",
-	"shinyalert"
-	)
-
-for (pkg in pkgs) {
-	suppressWarnings(
-		suppressPackageStartupMessages(
-			library(pkg, character.only = TRUE)
-			)
-		)
-}
-
-options(repr.plot.width = 15, repr.plot.height = 20)
-
-# Functions =====================================================================
-
-
-check.dim <- function(lif){
-	twodim <- if(dim(lif)[3] == 2) TRUE else FALSE
-
-	return(twodim)
-}
- 
-extract.image <- function(lif_name) {
-	lif <- read.image(lif_name)
-	if(is.null(dim(lif))) {
-		twodims <- sapply(lif, FUN = check.dim)
-		twodim_images <- lif[twodims]
-	} else {
-		twodim_images <- lif
-	}
-	return(twodim_images)
-}
-
-check.writeable <- function(input_file) {
-	if(file.exists(input_file)){
-		try_empty <- suppressWarnings(try(read.csv(input_file)))
-		if(!(summary(try_empty)[2] == "try-error")) {
-			try_cellularities <- read.csv(input_file)
-			try_cellularities <- suppressWarnings(try(write.csv(try_cellularities, input_file, row.names = FALSE), silent = TRUE))
-			if(!is.null(try_cellularities)) {
-				shinyalert(paste0(input_file, " is open"), "please close in order to write over it.\n
-					If you want to save the last run, please make a copy by another name", type = "error")
-				return(TRUE)
-			} else {return(FALSE)}
-		} else {return(FALSE)}
-	} else {return(FALSE)}
-}
-
-check.writeable.grid <- function(input_file) {
-	if(file.exists(input_file)){
-		try_empty <- suppressWarnings(try(read.csv(input_file, header = FALSE)))
-		if(!(summary(try_empty)[2] == "try-error")) {
-			try_cellularities <- read.csv(input_file, header = FALSE)
-			try_cellularities <- suppressWarnings(try(write.table(try_cellularities, input_file, row.names = FALSE, col.names = FALSE, sep = ","), silent = TRUE))
-			if(!is.null(try_cellularities)) {
-				shinyalert(paste0(input_file, " is open"), "please close in order to write over it.\n
-					If you want to save the last run, please make a copy by another name", type = "error")
-				return(TRUE)
-			} else {return(FALSE)}
-		} else {return(FALSE)}
-	} else {return(FALSE)}
-}
+source("r_clear_and_load.r")
 
 
 # Define UI ----
@@ -325,7 +234,7 @@ rv$done <- 0
   		lif_dirs <- list.files(path = "input-images", pattern = "lif$", recursive = TRUE, full.names = TRUE) 
 
   		for(i in 1:length(lif_dirs)){
-			lif <- extract.image(lif_dirs[i])
+			lif <- extract.bf(lif_dirs[i])
 			if(is.null(dim(lif))) {
 				lif_length <- length(lif)
 			} else {
@@ -521,7 +430,7 @@ lif_dirs <- list.files(path = "input-images", pattern = "lif$", recursive = TRUE
 image_names <- c()
 lif_lengths <- c()
 for(i in c(1:length(lif_dirs))) {
-	lif <- extract.image(lif_dirs[i])
+	lif <- extract.bf(lif_dirs[i])
 	if(is.null(dim(lif))) {
 		lif_length <- length(lif)
 	} else {
@@ -748,7 +657,7 @@ lif_dirs <- list.files(path = "input-images", pattern = "lif$", recursive = TRUE
 image_names <- c()
 lif_lengths <- c()
 for(i in c(1:length(lif_dirs))) {
-	lif <- extract.image(lif_dirs[i])
+	lif <- extract.bf(lif_dirs[i])
 	if(is.null(dim(lif))) {
 		lif_length <- length(lif)
 	} else {
@@ -1048,7 +957,7 @@ lif_dirs <- list.files(path = "input-images", pattern = "lif$", recursive = TRUE
 image_names <- c()
 lif_lengths <- c()
 for(i in c(1:length(lif_dirs))) {
-	lif <- extract.image(lif_dirs[i])
+	lif <- extract.bf(lif_dirs[i])
 	if(is.null(dim(lif))) {
 		lif_length <- length(lif)
 	} else {
