@@ -181,7 +181,7 @@ cat("Try cutting off top end like how amy does\n")
 
 gfp_cut_top <- gfp
 
-cut_off <- 0.1
+cut_off <- 0.05
 
 gfp_cut_top[gfp_cut_top > cut_off] <- cut_off
 
@@ -211,24 +211,28 @@ gfp_t[segmented == 0] <- 0
 plot(gfp_t)
 gfp_bw <- bwlabel(gfp_t)[,,1]
 gfp_cfs <- computeFeatures.shape(gfp_bw)
-sel <- which(gfp_cfs[,"s.area"] < nrow(gfp)^2*0.0001)
-gfp_rm <- rmObjects(gfp_bw, sel)
-plot(gfp_rm)
+sels <- which(gfp_cfs[,"s.area"] < nrow(gfp)^2*0.00015)
+gfp_rms <- rmObjects(gfp_bw, sels)
+plot(gfp_rms)
 
-gfp_cfm <- computeFeatures.moment(gfp_rm)
-
-centroids <- round(gfp_cfm[,c("m.cy","m.cx")])
+gfp_cfm <- computeFeatures.moment(gfp_rms)
+selm <- which(gfp_cfm[,"m.eccentricity"] > 0.9)
+gfp_rmm <- rmObjects(gfp_rms, selm)
+plot(gfp_rmm)
+gfp_rois <- computeFeatures.moment(gfp_rmm)
+centroids <- round(gfp_rois[,c("m.cy","m.cx")])
 
 
 gfp_overlay <- gfp_cut_top
 gfp_overlay[,,3] <- bf[,,3]
 for(i in 1:nrow(centroids)){
-	xs <- seq(from = centroids[i,1] - 20, to = centroids[i,1] + 20, by = 1)
-	ys <- seq(from = centroids[i,2] - 20, to = centroids[i,2] + 20, by = 1)
+	xs <- seq(from = centroids[i,1] - 10, to = centroids[i,1] + 10, by = 1)
+	ys <- seq(from = centroids[i,2] - 10, to = centroids[i,2] + 10, by = 1)
 	xs <- xs[xs > 0 & xs <= nrow(gfp)]
 	ys <- ys[ys > 0 & ys <= nrow(gfp)]
 	gfp_overlay[ys, xs, 1] <- 1
 }
+gfp_overlay[,,1] <- gfp_rmm
 #gfp_overlay[centroids[1,1], centroids[1,2], 2] <- 0
 plot(gfp_overlay)
 
