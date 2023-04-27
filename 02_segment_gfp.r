@@ -148,6 +148,7 @@ assign(paste0(input_image_type, "s"), images)
 assign(paste0(input_image_type, "_names"), image_names)
 }
 
+
 for(row_num in 1:length(gfp_names)) {
 
 #################    This will eventually be changed
@@ -155,14 +156,23 @@ bf_copy <- bf_names
 bf_names <- bf_names %>% str_replace_all("BF", "Image")
 #################
 
-for(i in bf_names)
+for(i in bf_names) {
+if(paste0(i, " normalised.", desired_output_format) %in% list.files("normalised-images")) {
+	assign(paste0("image_", i %>% str_replace_all(" ", "_"), "_normalised"),
+	readImage(paste0("normalised-images/", i, " normalised.", desired_output_format))
+	)
+}
+
 if(paste0(i, " segmented.", desired_output_format) %in% list.files("segmented-images")) {
 	assign(paste0("image_", i %>% str_replace_all(" ", "_"), "_segmented"),
 	readImage(paste0("segmented-images/", i, " segmented.", desired_output_format))
 	)
 }
+}
 
 segmented <- get(paste0("image_", bf_names[row_num] %>% str_replace_all(" ", "_"), "_segmented"))
+normalised <- get(paste0("image_", bf_names[row_num] %>% str_replace_all(" ", "_"), "_normalised"))
+
 
 #################
 bf_names <- bf_copy
@@ -181,7 +191,7 @@ cat("Try cutting off top end like how amy does\n")
 
 gfp_cut_top <- gfp
 
-cut_off <- 0.05
+cut_off <- 0.04
 
 gfp_cut_top[gfp_cut_top > cut_off] <- cut_off
 
@@ -189,51 +199,118 @@ gfp_cut_top <- gfp_cut_top*(1/cut_off)
 
 plot(gfp_cut_top)
 
-gfp_b <- gblur(gfp_cut_top, 2)
+gfp_b <- gblur(gfp_cut_top, 1)
 plot(gfp_b)
 
-hfilt <- matrix(c(1, 2, 1, 0, 0, 0, -1, -2, -1), nrow = 3) # sobel
-vfilt <- t(hfilt)
 
-gfpH <- filter2(gfp_b[,,1], hfilt, boundary="replicate")
-gfpV <- filter2(gfp_b[,,1], vfilt, boundary="replicate")
 
-hdata <- imageData(gfpH)
-vdata <- imageData(gfpV)
-edata <- sqrt((hdata)^2 + (vdata)^2)
+#d_gfp <- data.frame(
+#  red   = matrix(gfp_b[,,1], ncol=1),
+#  green = matrix(gfp_b[,,2], ncol=1),
+#  blue  = matrix(gfp_b[,,3], ncol=1)
+#  )
+#
+#cluster_no <- 4
+#
+#k_gfp <- kmeans(d_gfp, cluster_no) # separate into 3 colours
 
-# transform edge data to image
-gfpE <- Image(edata)
-plot(gfpE)
 
-gfp_t <- thresh(gfp_b)
-gfp_t[segmented == 0] <- 0
+#error <- vector()   # define an empty object to store the error for each cluster
+#for (i in 1:15){
+#  error[i]<-kmeans(d_gfp,i)$tot.withinss 
+#}
+
+#plot(error)
+
+
+#head(k_gfp)
+
+# Attach cluster labels to our dataframe
+#d_gfp$label <- k_gfp$cluster
+#
+## Let's also assign the cluster labels to the cluster colours
+#colours1 <- data.frame(k_gfp$centers, c(1:cluster_no))
+#colnames(colours1) <- c("red.c","green.c","blue.c","label")
+#colours1
+#
+#
+#d_gfp <- inner_join(d_gfp, colours1 ,by="label")
+#
+##head(d_gfp)
+#
+#d_gfp[d_gfp == min(k_gfp$centers[,1])] <- 0
+#
+#m_gfp_k <-
+#d_gfp %>%
+#select(red.c,green.c,blue.c) %>%
+#unlist() %>%
+#unname() %>%
+#array(, dim = dim(m_gfp)) %>%
+#Image(colormode = "Color")
+#
+#plot(m_gfp_k)
+#
+#m_gfp_kb <- gblur(m_gfp_k, 2)
+#plot(m_gfp_kb)
+
+#
+##sobel
+#hfilt <- 2*matrix(c(1, 2, 1, 0, 0, 0, -1, -2, -1), nrow = 3) # sobel
+#vfilt <- t(hfilt)
+#
+#normalisedH <- filter2(normalised[,,1], hfilt, boundary="replicate")
+#normalisedV <- filter2(normalised[,,1], vfilt, boundary="replicate")
+#
+#hdata <- imageData(normalisedH)
+#vdata <- imageData(normalisedV)
+#edata <- sqrt((hdata)^2 + (vdata)^2)
+#
+## transform edge data to image
+#normalisedE <- Image(edata)
+#plot(normalisedE)
+
+
+#gfp_t <- thresh(gfp_b[,,1])
+#gfp_t <- thresh(m_gfp_kb)
+gfp_t <- gfp_b
+#gfp_t <- gfp_b[,,1]
+#gfp_t[gfp_t > 0.5] <- 1
+#gfp_t[gfp_t <= 0.5] <- 0
+gfp_t[gfp_t > 0.45] <- 1
+gfp_t[gfp_t <= 0.45] <- 0
 plot(gfp_t)
-gfp_bw <- bwlabel(gfp_t)[,,1]
+
+
+gfp_bw <- bwlabel(gfp_t[,,1])
 gfp_cfs <- computeFeatures.shape(gfp_bw)
-sels <- which(gfp_cfs[,"s.area"] < nrow(gfp)^2*0.00015)
+sels <- which(gfp_cfs[,"s.area"] < nrow(gfp)^2*0.0001)
 gfp_rms <- rmObjects(gfp_bw, sels)
+gfp_rms <- fillHull(gfp_rms)
 plot(gfp_rms)
 
-gfp_cfm <- computeFeatures.moment(gfp_rms)
-selm <- which(gfp_cfm[,"m.eccentricity"] > 0.9)
-gfp_rmm <- rmObjects(gfp_rms, selm)
-plot(gfp_rmm)
-gfp_rois <- computeFeatures.moment(gfp_rmm)
+
+
+#gfp_cfm <- computeFeatures.moment(gfp_rms)
+#selm <- which(gfp_cfm[,"m.eccentricity"] > 0.95)
+#gfp_rmm <- rmObjects(gfp_rms, selm)
+#plot(gfp_rmm)
+#gfp_rmm <- gfp_rms
+gfp_rois <- computeFeatures.moment(gfp_rms)
 centroids <- round(gfp_rois[,c("m.cy","m.cx")])
 
 
 gfp_overlay <- gfp_cut_top
+gfp_overlay[,,1] <- 0
 gfp_overlay[,,3] <- bf[,,3]
 for(i in 1:nrow(centroids)){
-	xs <- seq(from = centroids[i,1] - 10, to = centroids[i,1] + 10, by = 1)
-	ys <- seq(from = centroids[i,2] - 10, to = centroids[i,2] + 10, by = 1)
+	xs <- seq(from = centroids[i,1] - 15, to = centroids[i,1] + 15, by = 1)
+	ys <- seq(from = centroids[i,2] - 15, to = centroids[i,2] + 15, by = 1)
 	xs <- xs[xs > 0 & xs <= nrow(gfp)]
 	ys <- ys[ys > 0 & ys <= nrow(gfp)]
 	gfp_overlay[ys, xs, 1] <- 1
 }
-gfp_overlay[,,1] <- gfp_rmm
-#gfp_overlay[centroids[1,1], centroids[1,2], 2] <- 0
+#gfp_overlay[,,1] <- gfp_rmm
+gfp_overlay[centroids[1,1], centroids[1,2], 2] <- 0
 plot(gfp_overlay)
 
 }

@@ -1,6 +1,9 @@
 
 source("r_clear_and_load.r")
-
+library(shiny)
+library(shinyjs)
+library(shinyWidgets)
+library(shinyalert)
 
 # Define UI ----
 ui <- fluidPage(
@@ -240,7 +243,7 @@ rv$done <- 0
 			} else {
 				lif_length <- 1
 			}
-			if(lif_length*i >= rv$image_no) {
+			if(lif_length*i >= rv$image_no & lif_length*(i-1) < rv$image_no) {
 				if(lif_length == 1) {
 					image_frame <- lif
 				} else {
