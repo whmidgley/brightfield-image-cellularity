@@ -10,40 +10,55 @@ centroids <- data.frame(centroids)
 for (i in 1:nrow(centroids)) {
 
 
+gfp_box <- rmObjects(gfp_rms, index(gfp_rois[-i,]))
+
 pixel <- gfp_rms[centroids[i,2], centroids[i,1]]
 
 if(pixel == 1) {
 	# FIND TOP
 	centroid_top <- centroids[i,1]
 	pixel_top <- pixel
-	while(pixel_top == 1) {
+	stop_top <- FALSE
+	while(pixel_top == 1 & !stop_top) {
 		# move up until black
-		centroid_top[1] <- centroid_top - 1
-		pixel_top <- gfp_rms[centroids[i,2], centroid_top]
+		if(centroid_top - 1 %in% 1:nrow(gfp_box)) {
+			centroid_top[1] <- centroid_top - 1
+			pixel_top <- gfp_box[centroids[i,2], centroid_top]
+		} else {stop_top <- TRUE}
+		
 	}
 	# FIND BOTTOM
 	centroid_bottom <- centroids[i,1]
 	pixel_bottom <- pixel
-	while(pixel_bottom == 1) {
+	stop_bottom <- FALSE
+	while(pixel_bottom == 1 & !stop_bottom) {
 		# move up until black
+		if(centroid_bottom + 1 %in% 1:nrow(gfp_box)) {
 		centroid_bottom <- centroid_bottom + 1
-		pixel_bottom <- gfp_rms[centroids[i,2], centroid_bottom]
+			pixel_bottom <- gfp_box[centroids[i,2], centroid_bottom]
+		} else {stop_bottom <- TRUE}
 	}
 	# FIND LEFT
 	centroid_left <- centroids[i,2]
 	pixel_left <- pixel
-	while(pixel_left == 1) {
+	stop_left <- FALSE
+	while(pixel_left == 1 & !stop_left) {
 		# move up until black
+		if(centroid_left - 1 %in% 1:nrow(gfp_box)) {
 		centroid_left <- centroid_left - 1
-		pixel_left <- gfp_rms[centroid_left, centroids[i,1]]
+			pixel_left <- gfp_box[centroid_left, centroids[i,1]]
+		} else {stop_left <- TRUE}
 	}
 	# FIND RIGHT
 	centroid_right <- centroids[i,2]
 	pixel_right <- pixel
-	while(pixel_right == 1) {
+	stop_right <- FALSE
+	while(pixel_right == 1 & !stop_right) {
 		# move up until black
+		if(centroid_right + 1 %in% 1:nrow(gfp_box)) {
 		centroid_right <- centroid_right + 1
-		pixel_right <- gfp_rms[centroid_right, centroids[i,1]]
+			pixel_right <- gfp_box[centroid_right, centroids[i,1]]
+		} else {stop_right <- TRUE}
 	}
 }
 
@@ -59,5 +74,5 @@ ys <- ys[ys > 0 & ys <= nrow(gfp)]
 gfp_overlay[ys, xs, 1] <- 1
 }
 
-
+display(gfp_rms)
 display(gfp_overlay)
