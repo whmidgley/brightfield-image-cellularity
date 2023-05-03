@@ -7,7 +7,7 @@ if (Sys.info()["user"] == "william.midgley") {
   setwd("~/projects/brightfield-image-cellularity")
 } else if(Sys.info()["user"] == "molca") {
   setwd("C:/Users/molca/OneDrive - Swansea University/ALR_PhD/Image Analysis Colaboration/brightfield-image-cellularity")
-} else {stop("please add wd")}
+}
 
 suppressWarnings({
 file.remove("m_bf.rdata")
@@ -53,7 +53,12 @@ pkgs <- c(
 	"EBImage",
 	"RBioFormats",
 	"readr",
+<<<<<<< HEAD:r_clear_and_load.r
 	"stringr"
+=======
+	"stringr",
+	"mclust"
+>>>>>>> 6-tidy-for-gui:scripts/r_clear_and_load.r
 	)
 
 for (pkg in pkgs) {
