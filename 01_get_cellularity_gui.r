@@ -456,7 +456,7 @@ for(i in c(1:length(lif_dirs))) {
 		} else {
 			row_num <- sum(lif_lengths[1:(i-1)]) + j
 		}
-		image_names[row_num] <- c(paste0(sub('.+/(.+)', '\\1', lif_dirs[i] %>% str_replace(".lif", "")), " Image ", j))
+		image_names[row_num] <- c(paste0(sub('.+/(.+)', '\\1', lif_dirs[i] %>% str_replace(".lif", "")), " BF ", j))
 		assign(paste0("image_", image_names[row_num] %>% str_replace_all(" ", "_")), image)
 	}
 }
@@ -683,7 +683,7 @@ for(i in c(1:length(lif_dirs))) {
 		} else {
 			row_num <- sum(lif_lengths[1:(i-1)]) + j
 		}
-		image_names[row_num] <- c(paste0(sub('.+/(.+)', '\\1', lif_dirs[i] %>% str_replace(".lif", "")), " Image ", j))
+		image_names[row_num] <- c(paste0(sub('.+/(.+)', '\\1', lif_dirs[i] %>% str_replace(".lif", "")), " BF ", j))
 		assign(paste0("image_", image_names[row_num] %>% str_replace_all(" ", "_")), image)
 	}
 }
@@ -983,7 +983,7 @@ for(i in c(1:length(lif_dirs))) {
 		} else {
 			row_num <- sum(lif_lengths[1:(i-1)]) + j
 		}
-		image_names[row_num] <- c(paste0(sub('.+/(.+)', '\\1', lif_dirs[i] %>% str_replace(".lif", "")), " Image ", j))
+		image_names[row_num] <- c(paste0(sub('.+/(.+)', '\\1', lif_dirs[i] %>% str_replace(".lif", "")), " BF ", j))
 		assign(paste0("image_", image_names[row_num] %>% str_replace_all(" ", "_")), image)
 	}
 }

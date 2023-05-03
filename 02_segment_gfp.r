@@ -1,13 +1,16 @@
 
 source("r_clear_and_load.r")
 
-# ==========================================================================
-# Variables
-# ==========================================================================
 
+# Variables =====================================================================
 
 use_segmented_bf <- TRUE
 input_image_type <- "gfp"
+
+brighten <- 0.04
+blur <- 1
+cut_off <- 0.45
+min_cell_size <- 0.00013
 
 
 # ==========================================================================
@@ -15,9 +18,9 @@ input_image_type <- "gfp"
 # ==========================================================================
 
 if(!dir.exists("input-images")) dir.create("input-images")
-if(!dir.exists("normalised-images")) dir.create("normalised-images")
-if(!dir.exists("overlay-images")) dir.create("overlay-images")
-if(!dir.exists("segmented-images")) dir.create("segmented-images")
+if(!dir.exists("segmented-gfp-images")) dir.create("segmented-gfp-images")
+if(!dir.exists("overlay-gfp-images")) dir.create("overlay-gfp-images")	
+if(!dir.exists("gfp-cell-stats")) dir.create("gfp-cell-stats")
 
 # ==========================================================================
 # File formats
@@ -148,169 +151,129 @@ assign(paste0(input_image_type, "s"), images)
 assign(paste0(input_image_type, "_names"), image_names)
 }
 
+gfp_overall_stats <- matrix(ncol = 4, nrow = length(gfp_names))
+colnames(gfp_overall_stats) <- c("Name", "Percentage cellular area fluorescing", "Mean brightness of fluorescing cells", "SD brightness of fluorescing cells")
 
 for(row_num in 1:length(gfp_names)) {
-
-#################    This will eventually be changed
-bf_copy <- bf_names
-bf_names <- bf_names %>% str_replace_all("BF", "Image")
-#################
 
 for(i in bf_names) {
 if(paste0(i, " normalised.", desired_output_format) %in% list.files("normalised-images")) {
 	assign(paste0("image_", i %>% str_replace_all(" ", "_"), "_normalised"),
 	readImage(paste0("normalised-images/", i, " normalised.", desired_output_format))
 	)
+} else {
+	bf_copy <- i
+	i <- i %>% str_replace_all("BF", "Image")
+	if(paste0(i, " normalised.", desired_output_format) %in% list.files("normalised-images")) {
+		assign(paste0("image_", i %>% str_replace_all("Image", "BF") %>% str_replace_all(" ", "_"), "_normalised"),
+		readImage(paste0("normalised-images/", i, " normalised.", desired_output_format))
+		)
+	}
+	i <- bf_copy
 }
 
 if(paste0(i, " segmented.", desired_output_format) %in% list.files("segmented-images")) {
 	assign(paste0("image_", i %>% str_replace_all(" ", "_"), "_segmented"),
 	readImage(paste0("segmented-images/", i, " segmented.", desired_output_format))
 	)
+} else {
+	bf_copy <- i
+	i <- i %>% str_replace_all("BF", "Image")
+	if(paste0(i, " segmented.", desired_output_format) %in% list.files("segmented-images")) {
+		assign(paste0("image_", i %>% str_replace_all("Image", "BF") %>% str_replace_all(" ", "_"), "_segmented"),
+		readImage(paste0("segmented-images/", i, " segmented.", desired_output_format))
+		)
+	}
+	i <- bf_copy
 }
 }
-
-segmented <- get(paste0("image_", bf_names[row_num] %>% str_replace_all(" ", "_"), "_segmented"))
-normalised <- get(paste0("image_", bf_names[row_num] %>% str_replace_all(" ", "_"), "_normalised"))
-
-
-#################
-bf_names <- bf_copy
-#################
-
-
 gfp <- get(paste0("image_", gfp_names[row_num] %>% str_replace_all(" ", "_")))
-
-
 bf <- get(paste0("image_", bf_names[row_num] %>% str_replace_all(" ", "_")))
+normalised <- get(paste0("image_", bf_names[row_num] %>% str_replace_all(" ", "_"), "_normalised"))
+segmented <- get(paste0("image_", bf_names[row_num] %>% str_replace_all(" ", "_"), "_segmented"))
 
-#plot(gfp)
-
-# Try cutting off top end like how amy does =====================================
-cat("Try cutting off top end like how amy does\n")
 
 gfp_cut_top <- gfp
 
-cut_off <- 0.04
 
-gfp_cut_top[gfp_cut_top > cut_off] <- cut_off
+gfp_cut_top[gfp_cut_top > brighten] <- brighten
 
-gfp_cut_top <- gfp_cut_top*(1/cut_off)
+gfp_cut_top <- gfp_cut_top*(1/brighten)
 
 plot(gfp_cut_top)
 
-gfp_b <- gblur(gfp_cut_top, 1)
+gfp_b <- gblur(gfp_cut_top, blur)
 plot(gfp_b)
 
 
-
-#d_gfp <- data.frame(
-#  red   = matrix(gfp_b[,,1], ncol=1),
-#  green = matrix(gfp_b[,,2], ncol=1),
-#  blue  = matrix(gfp_b[,,3], ncol=1)
-#  )
-#
-#cluster_no <- 4
-#
-#k_gfp <- kmeans(d_gfp, cluster_no) # separate into 3 colours
-
-
-#error <- vector()   # define an empty object to store the error for each cluster
-#for (i in 1:15){
-#  error[i]<-kmeans(d_gfp,i)$tot.withinss 
-#}
-
-#plot(error)
-
-
-#head(k_gfp)
-
-# Attach cluster labels to our dataframe
-#d_gfp$label <- k_gfp$cluster
-#
-## Let's also assign the cluster labels to the cluster colours
-#colours1 <- data.frame(k_gfp$centers, c(1:cluster_no))
-#colnames(colours1) <- c("red.c","green.c","blue.c","label")
-#colours1
-#
-#
-#d_gfp <- inner_join(d_gfp, colours1 ,by="label")
-#
-##head(d_gfp)
-#
-#d_gfp[d_gfp == min(k_gfp$centers[,1])] <- 0
-#
-#m_gfp_k <-
-#d_gfp %>%
-#select(red.c,green.c,blue.c) %>%
-#unlist() %>%
-#unname() %>%
-#array(, dim = dim(m_gfp)) %>%
-#Image(colormode = "Color")
-#
-#plot(m_gfp_k)
-#
-#m_gfp_kb <- gblur(m_gfp_k, 2)
-#plot(m_gfp_kb)
-
-#
-##sobel
-#hfilt <- 2*matrix(c(1, 2, 1, 0, 0, 0, -1, -2, -1), nrow = 3) # sobel
-#vfilt <- t(hfilt)
-#
-#normalisedH <- filter2(normalised[,,1], hfilt, boundary="replicate")
-#normalisedV <- filter2(normalised[,,1], vfilt, boundary="replicate")
-#
-#hdata <- imageData(normalisedH)
-#vdata <- imageData(normalisedV)
-#edata <- sqrt((hdata)^2 + (vdata)^2)
-#
-## transform edge data to image
-#normalisedE <- Image(edata)
-#plot(normalisedE)
-
-
-#gfp_t <- thresh(gfp_b[,,1])
-#gfp_t <- thresh(m_gfp_kb)
 gfp_t <- gfp_b
-#gfp_t <- gfp_b[,,1]
-#gfp_t[gfp_t > 0.5] <- 1
-#gfp_t[gfp_t <= 0.5] <- 0
-gfp_t[gfp_t > 0.45] <- 1
-gfp_t[gfp_t <= 0.45] <- 0
+
+gfp_t[gfp_t > cut_off] <- 1
+gfp_t[gfp_t <= cut_off] <- 0
 plot(gfp_t)
 
 
 gfp_bw <- bwlabel(gfp_t[,,1])
 gfp_cfs <- computeFeatures.shape(gfp_bw)
-sels <- which(gfp_cfs[,"s.area"] < nrow(gfp)^2*0.0001)
-gfp_rms <- rmObjects(gfp_bw, sels)
+sels <- which(gfp_cfs[,"s.area"] < nrow(gfp)^2*min_cell_size)
+gfp_rms <- rmObjects(gfp_bw, sels) 
 gfp_rms <- fillHull(gfp_rms)
 plot(gfp_rms)
 
-
-
-#gfp_cfm <- computeFeatures.moment(gfp_rms)
-#selm <- which(gfp_cfm[,"m.eccentricity"] > 0.95)
-#gfp_rmm <- rmObjects(gfp_rms, selm)
-#plot(gfp_rmm)
-#gfp_rmm <- gfp_rms
 gfp_rois <- computeFeatures.moment(gfp_rms)
-centroids <- round(gfp_rois[,c("m.cy","m.cx")])
+if(is.null(gfp_rois)) stop("Acellular image")
+centroids <- round(gfp_rois[, c("m.cy","m.cx")])
 
 
 gfp_overlay <- gfp_cut_top
 gfp_overlay[,,1] <- 0
 gfp_overlay[,,3] <- bf[,,3]
-for(i in 1:nrow(centroids)){
-	xs <- seq(from = centroids[i,1] - 15, to = centroids[i,1] + 15, by = 1)
-	ys <- seq(from = centroids[i,2] - 15, to = centroids[i,2] + 15, by = 1)
-	xs <- xs[xs > 0 & xs <= nrow(gfp)]
-	ys <- ys[ys > 0 & ys <= nrow(gfp)]
-	gfp_overlay[ys, xs, 1] <- 1
-}
-#gfp_overlay[,,1] <- gfp_rmm
-gfp_overlay[centroids[1,1], centroids[1,2], 2] <- 0
+gfp_overlay[,,1] <- gfp_rms
+
 plot(gfp_overlay)
 
+# % cellular area fluorescing ===========================================================
+cat("% cellular area fluorescing\n")
+
+gfp_rms[gfp_rms > 1] <- 1
+gfp_rms[gfp_rms < 1] <- 0
+
+perc_fluorescing <- sum(gfp_rms)*100/sum(segmented)
+
+cat("percentage of cellular area fluorescing is ", round(perc_fluorescing, 2), "%\n")
+
+# Get general stats =============================================================
+cat("Get general stats\n")
+
+hist_data_cell <- data.frame(fluo = gfp[gfp_rms == 1], type = "cell")
+hist_data_all <- data.frame(fluo = matrix(gfp), type = "all")
+
+hist_data <- rbind(hist_data_cell, hist_data_all)
+
+hist_data %>%
+ggplot(aes(x = fluo)) + 
+    geom_density(alpha = 0.3) +
+    xlab("Brightness") +
+    facet_grid(vars(type), scales = "free_y")
+
+gfp_overall_stats[row_num,] <- c(gfp_names[row_num], perc_fluorescing, mean(gfp[gfp_rms == 1]), sd(gfp[gfp_rms == 1]))
+
+cell_stats <- matrix(ncol = 5, nrow = nrow(centroids))
+colnames(cell_stats) <- c("cell_no", "mean_brightness", "sd_brightness", "x", "y (top to bottom)")
+
+for (i in 1:nrow(centroids)) {
+
+	gfp_bw <- bwlabel(gfp_rms)
+	sel_cell <- which(as.numeric(rownames(gfp_rois)) != i)
+	gfp_cell <- rmObjects(gfp_bw, sel_cell)
+	
+	
+	cell_stats[i,] <- c(i, mean(gfp[gfp_cell == 1]), sd(gfp[gfp_cell == 1]), gfp_rois[i,"m.cx"], gfp_rois[i,"m.cy"])
+
 }
+print(cell_stats)
+write.csv(cell_stats, file = paste0("gfp-cell-stats/", gfp_names[row_num], " stats.csv"))
+writeImage(gfp_overlay, paste0("overlay-gfp-images/", gfp_names[row_num], " overlay.", desired_output_format))
+writeImage(gfp_rms, paste0("segmented-gfp-images/", gfp_names[row_num], " segmented.", desired_output_format))
+}
+write.csv(gfp_overall_stats, file = "gfp_overall_stats.csv")
