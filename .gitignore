@@ -39,16 +39,21 @@ vignettes/*.pdf
 .Renviron
 
 # Images with sensitive names
+input/
 input-images/
 *.tif
+*.lif
 *.rdata
 
 grid-cellularities/
 
-normalised-images/
+bf-normalised/
 
-segmented/
-overlay/
+bf-segmented/
+bf-overlay/
+gfp-overlay/
+gfp-segmented/
+cell-stats/
 99_cellularity_report_files/
 
 brightfield-images/reports/
@@ -58,3 +63,4 @@ human_cellularities.csv
 human_cellularities_fixed.csv
 cellularities.csv
 cellularities_test.csv
+overall_stats.csv
