@@ -294,7 +294,7 @@ colnames(cell_stats) <- c("cell_no", "mean_brightness", "sd_brightness", "x", "y
 print(cell_stats)
 write.csv(cell_stats, file = paste0("output/gfp-analysis/cell-stats/", gfp_names[row_num], " stats.csv"))
 }
-writeImage(gfp_overlay, paste0("gfp-overlay/", gfp_names[row_num], " overlay.", desired_output_format))
-writeImage(gfp_rms, paste0("gfp-segmented/", gfp_names[row_num], " segmented.", desired_output_format))
+writeImage(gfp_overlay, paste0("output/gfp-analysis/gfp-overlay/", gfp_names[row_num], " overlay.", desired_output_format))
+writeImage(gfp_rms, paste0("output/gfp-analysis/gfp-segmented/", gfp_names[row_num], " segmented.", desired_output_format))
 }
 write.csv(gfp_overall_stats, file = "output/gfp-analysis/overall_stats.csv")
