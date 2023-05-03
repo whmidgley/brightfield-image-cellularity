@@ -54,7 +54,7 @@ pkgs <- c(
 	"RBioFormats",
 	"readr",
 	"stringr"
-	"clusterR"
+	"ClusterR"
 	)
 
 for (pkg in pkgs) {

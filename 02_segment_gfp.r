@@ -202,6 +202,8 @@ gfp_cut_top <- gfp_cut_top*(1/brighten)
 
 plot(gfp_cut_top)
 
+GMM()
+
 gfp_b <- gblur(gfp_cut_top, blur)
 plot(gfp_b)
 
