@@ -77,5 +77,5 @@ m_bf_normal <- Image(m_bf_normal, colormode = "Color")
 # Save normalised image
 # ==========================================================================
 if(exists("image_names")){
-writeImage(m_bf_normal, paste0("normalised-images/", image_names[j], " normalised.", desired_output_format))
+writeImage(m_bf_normal, paste0("output/bf-analysis/bf-normalised/", image_names[j], " normalised.", desired_output_format))
 }

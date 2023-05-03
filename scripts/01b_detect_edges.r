@@ -16,7 +16,7 @@ if(file.exists("change_grid_no.rdata")) load("change_grid_no.rdata")
 if(file.exists("flag_thresh.rdata")) load("flag_thresh.rdata")
 if(file.exists("desired_output_format.rdata")) load("desired_output_format.rdata")
 
-img <- readImage(paste0("normalised-images/", image_names[j], " normalised.", desired_output_format))
+img <- readImage(paste0("output/bf-analysis/bf-normalised/", image_names[j], " normalised.", desired_output_format))
 
 # ==========================================================================
 # Edge detection

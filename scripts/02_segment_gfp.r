@@ -1,5 +1,5 @@
 
-source("r_clear_and_load.r")
+source("scripts/r_clear_and_load.r")
 
 
 # Variables =====================================================================
@@ -7,7 +7,7 @@ source("r_clear_and_load.r")
 use_segmented_bf <- TRUE
 input_image_type <- "gfp"
 
-brighten <- 0.8
+brighten <- 0.04
 blur <- 1
 cut_off <- 0.45
 min_cell_size <- 0.00013
@@ -17,10 +17,10 @@ min_cell_size <- 0.00013
 # Check folders exist
 # ==========================================================================
 
-if(!dir.exists("input-images")) dir.create("input-images")
-if(!dir.exists("segmented-gfp-images")) dir.create("segmented-gfp-images")
-if(!dir.exists("overlay-gfp-images")) dir.create("overlay-gfp-images")	
-if(!dir.exists("gfp-cell-stats")) dir.create("gfp-cell-stats")
+if(!dir.exists("input")) dir.create("input")
+if(!dir.exists("output/gfp-analysis/gfp-segmented")) dir.create("output/gfp-analysis/gfp-segmented")
+if(!dir.exists("output/gfp-analysis/gfp-overlay")) dir.create("output/gfp-analysis/gfp-overlay")	
+if(!dir.exists("output/gfp-analysis/cell-stats")) dir.create("output/gfp-analysis/cell-stats")
 
 # ==========================================================================
 # File formats
@@ -45,12 +45,12 @@ if(auto_lif_detect) {
 	# input format can be lif or tif
 	input_format <- "lif"
 } else {
-	image_file_contents <- list.files(path = "input-images", recursive = TRUE, full.names = TRUE)
+	image_file_contents <- list.files(path = "input", recursive = TRUE, full.names = TRUE)
 
 	compatible_types <- c("lif", "tif", "tiff", "png", "jpeg", "jpg")
 
 	if(length(image_file_contents) == 0) {
-		stop("File input-images is empty. Please add images or lifs")
+		stop("File input is empty. Please add images or lifs")
 	}
 	if(!sapply(X = compatible_types, FUN = filetype.test, file = image_file_contents) %>% vector.XOR()) {
 		stop("Multiple file formats detected. Please remove unwanted file format")
@@ -93,7 +93,7 @@ if(auto_lif_detect) {
 
 if(input_format == "lif") {
 
-lif_dirs <- list.files(path = "input-images", pattern = "lif$", recursive = TRUE, full.names = TRUE) 
+lif_dirs <- list.files(path = "input", pattern = "lif$", recursive = TRUE, full.names = TRUE) 
 
 
 gfp_names <- c()
@@ -136,7 +136,7 @@ for(i in c(1:length(lif_dirs))) {
 }
 } else {
 
-images <- list.files(path = "input-images", pattern = input_format, recursive = TRUE, full.names = TRUE) 
+images <- list.files(path = "input", pattern = input_format, recursive = TRUE, full.names = TRUE) 
 
 cellularities <- data.frame(matrix(nrow=length(images), ncol=2))
 colnames(cellularities) <- c("image_name", "cellularity")
@@ -154,34 +154,49 @@ assign(paste0(input_image_type, "_names"), image_names)
 gfp_overall_stats <- matrix(ncol = 4, nrow = length(gfp_names))
 colnames(gfp_overall_stats) <- c("Name", "Percentage cellular area fluorescing", "Mean brightness of fluorescing cells", "SD brightness of fluorescing cells")
 
+
+# ==========================================================================
+# Check output file isn't open
+# ==========================================================================
+
+
+check.writeable("output/gfp-analysis/overall_stats.csv")
+
+invisible(sapply(paste0("output/gfp-analysis/cell-stats/", gfp_names, " stats.csv"), FUN = check.writeable.grid))
+
+
+# ==========================================================================
+# Start
+# ==========================================================================
+
 for(row_num in 1:length(gfp_names)) {
 
 for(i in bf_names) {
-if(paste0(i, " normalised.", desired_output_format) %in% list.files("normalised-images")) {
+if(paste0(i, " normalised.", desired_output_format) %in% list.files("output/bf-analysis/bf-normalised")) {
 	assign(paste0("image_", i %>% str_replace_all(" ", "_"), "_normalised"),
-	readImage(paste0("normalised-images/", i, " normalised.", desired_output_format))
+	readImage(paste0("output/bf-analysis/bf-normalised/", i, " normalised.", desired_output_format))
 	)
 } else {
 	bf_copy <- i
 	i <- i %>% str_replace_all("BF", "Image")
-	if(paste0(i, " normalised.", desired_output_format) %in% list.files("normalised-images")) {
+	if(paste0(i, " normalised.", desired_output_format) %in% list.files("output/bf-analysis/bf-normalised")) {
 		assign(paste0("image_", i %>% str_replace_all("Image", "BF") %>% str_replace_all(" ", "_"), "_normalised"),
-		readImage(paste0("normalised-images/", i, " normalised.", desired_output_format))
+		readImage(paste0("output/bf-analysis/bf-normalised/", i, " normalised.", desired_output_format))
 		)
 	}
 	i <- bf_copy
 }
 
-if(paste0(i, " segmented.", desired_output_format) %in% list.files("segmented-images")) {
+if(paste0(i, " segmented.", desired_output_format) %in% list.files("output/bf-analysis/bf-segmented")) {
 	assign(paste0("image_", i %>% str_replace_all(" ", "_"), "_segmented"),
-	readImage(paste0("segmented-images/", i, " segmented.", desired_output_format))
+	readImage(paste0("output/bf-analysis/bf-segmented/", i, " segmented.", desired_output_format))
 	)
 } else {
 	bf_copy <- i
 	i <- i %>% str_replace_all("BF", "Image")
-	if(paste0(i, " segmented.", desired_output_format) %in% list.files("segmented-images")) {
+	if(paste0(i, " segmented.", desired_output_format) %in% list.files("output/bf-analysis/bf-segmented")) {
 		assign(paste0("image_", i %>% str_replace_all("Image", "BF") %>% str_replace_all(" ", "_"), "_segmented"),
-		readImage(paste0("segmented-images/", i, " segmented.", desired_output_format))
+		readImage(paste0("output/bf-analysis/bf-segmented/", i, " segmented.", desired_output_format))
 		)
 	}
 	i <- bf_copy
@@ -206,8 +221,7 @@ gfp_b <- gblur(gfp_cut_top, blur)
 plot(gfp_b)
 
 
-#gfp_t <- gfp_b
-gfp_t <- gfp_cut_top
+gfp_t <- gfp_b
 
 gfp_t[gfp_t > cut_off] <- 1
 gfp_t[gfp_t <= cut_off] <- 0
@@ -278,9 +292,9 @@ colnames(cell_stats) <- c("cell_no", "mean_brightness", "sd_brightness", "x", "y
 
 
 print(cell_stats)
-write.csv(cell_stats, file = paste0("gfp-cell-stats/", gfp_names[row_num], " stats.csv"))
+write.csv(cell_stats, file = paste0("output/gfp-analysis/cell-stats/", gfp_names[row_num], " stats.csv"))
 }
-writeImage(gfp_overlay, paste0("overlay-gfp-images/", gfp_names[row_num], " overlay.", desired_output_format))
-writeImage(gfp_rms, paste0("segmented-gfp-images/", gfp_names[row_num], " segmented.", desired_output_format))
+writeImage(gfp_overlay, paste0("gfp-overlay/", gfp_names[row_num], " overlay.", desired_output_format))
+writeImage(gfp_rms, paste0("gfp-segmented/", gfp_names[row_num], " segmented.", desired_output_format))
 }
-write.csv(gfp_overall_stats, file = "gfp_overall_stats.csv")
+write.csv(gfp_overall_stats, file = "output/gfp-analysis/overall_stats.csv")

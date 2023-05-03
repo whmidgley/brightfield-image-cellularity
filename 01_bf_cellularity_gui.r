@@ -234,7 +234,7 @@ rv$done <- 0
   	output$original <- renderPlot({
   		if(rv$done > 0) {
   		if(rv$input_format == "lif") {
-  		lif_dirs <- list.files(path = "input-images", pattern = "lif$", recursive = TRUE, full.names = TRUE) 
+  		lif_dirs <- list.files(path = "input", pattern = "lif$", recursive = TRUE, full.names = TRUE) 
 
   		for(i in 1:length(lif_dirs)){
 			lif <- extract.bf(lif_dirs[i])
@@ -257,7 +257,7 @@ rv$done <- 0
 			}
 		}
 		} else {
-		rv$images <- list.files(path = "input-images", pattern = rv$input_format, recursive = TRUE, full.names = TRUE) 
+		rv$images <- list.files(path = "input", pattern = rv$input_format, recursive = TRUE, full.names = TRUE) 
 		m_bf <- suppressWarnings(readImage(paste0(rv$images[rv$image_no])))
 	}
 	plot(m_bf)
@@ -265,28 +265,28 @@ rv$done <- 0
 	})
   	output$normalised <- renderPlot({
   		if(rv$done > 0) {
-  			readImage(paste0("normalised-images/", rv$image_names[rv$image_no], " normalised.", input$desired_output_format)) %>%
+  			readImage(paste0("output/bf-analysis/bf-normalised/", rv$image_names[rv$image_no], " normalised.", input$desired_output_format)) %>%
   			plot()
   		}
   	})
   	output$segmented <- renderPlot({
   		if(rv$done > 0) {
-  			readImage(paste0("segmented-images/", rv$image_names[rv$image_no], " segmented.", input$desired_output_format)) %>%
+  			readImage(paste0("output/bf-analysis/bf-segmented/", rv$image_names[rv$image_no], " segmented.", input$desired_output_format)) %>%
   			plot()
   		}
   	})
   	output$overlay <- renderPlot({
   		if(rv$done > 0) {
-  			readImage(paste0("overlay-images/", rv$image_names[rv$image_no], " overlay.", input$desired_output_format)) %>%
+  			readImage(paste0("output/bf-analysis/bf-overlay/", rv$image_names[rv$image_no], " overlay.", input$desired_output_format)) %>%
   			plot()
   		}
   	})
     output$show_cellularity <- renderText({
     	if(rv$done > 0) {
-				if(file.exists("cellularities.csv")) {
-					try_empty <- suppressWarnings(try(read.csv("cellularities.csv")))
+				if(file.exists("output/bf-analysis/cellularities.csv")) {
+					try_empty <- suppressWarnings(try(read.csv("output/bf-analysis/cellularities.csv")))
 					if(!(summary(try_empty)[2] == "try-error")) {
-						cells <- read.csv("cellularities.csv")
+						cells <- read.csv("output/bf-analysis/cellularities.csv")
 						paste0("<B>Cellularity: </B>", round(cells[rv$image_no, 2], 1), "%")
 					}
 				}
@@ -370,18 +370,18 @@ filetype.test <- function(file, extension) {
 	str_detect(file, paste0(".", extension, "$")) %>% vector.OR()
 }
 
-image_file_contents <- list.files(path = "input-images", recursive = TRUE, full.names = TRUE)
+image_file_contents <- list.files(path = "input", recursive = TRUE, full.names = TRUE)
 
 if(auto_lif_detect) {
 	# input format can be lif or tif
 	input_format <- "lif"
 } else {
-	image_file_contents <- list.files(path = "input-images", recursive = TRUE, full.names = TRUE)
+	image_file_contents <- list.files(path = "input", recursive = TRUE, full.names = TRUE)
 
 	compatible_types <- c("lif", "tif", "tiff", "png", "jpeg", "jpg")
 
 	if(length(image_file_contents) == 0) {
-		shinyalert("File input-images is empty", "Please add images or lifs", type = "error")
+		shinyalert("File input is empty", "Please add images or lifs", type = "error")
 		return(NULL)
 	}
 	if(!sapply(X = compatible_types, FUN = filetype.test, file = image_file_contents) %>% vector.XOR()) {
@@ -427,7 +427,7 @@ rv$input_format <- input_format
 
 if(input_format == "lif") {
 
-lif_dirs <- list.files(path = "input-images", pattern = "lif$", recursive = TRUE, full.names = TRUE) 
+lif_dirs <- list.files(path = "input", pattern = "lif$", recursive = TRUE, full.names = TRUE) 
 
 
 image_names <- c()
@@ -462,7 +462,7 @@ for(i in c(1:length(lif_dirs))) {
 }
 } else {
 
-images <- list.files(path = "input-images", pattern = input_format, recursive = TRUE, full.names = TRUE) 
+images <- list.files(path = "input", pattern = input_format, recursive = TRUE, full.names = TRUE) 
 
 rv$images <- images
 
@@ -470,7 +470,7 @@ cellularities <- data.frame(matrix(nrow=length(images), ncol=2))
 colnames(cellularities) <- c("image_name", "cellularity")
 
 if(leica_snapshot_flg) {
-image_names <- sub('.+/(.+)', '\\1', images) %>% str_replace("Effectene.lif_", "") %>% str_replace(paste0("Snapshot1.", input_format), "") %>% str_replace(".lif_", " ")
+	image_names <- sub('.+/(.+)', '\\1', images) %>% str_replace("Effectene.lif_", "") %>% str_replace(paste0("Snapshot1.", input_format), "") %>% str_replace(".lif_", " ")
 } else {
 	image_names <- sub('.+/(.+)', '\\1', images) %>% str_replace("Effectene.lif_", "")
 }
@@ -557,11 +557,11 @@ cat("desired_output_format is ", desired_output_format, "\n")
 # ==========================================================================
 
 
-if(!dir.exists("input-images")) dir.create("input-images")
-if(!dir.exists("grid-cellularities") & grid_output) dir.create("grid-cellularities")
-if(!dir.exists("normalised-images")) dir.create("normalised-images")
-if(!dir.exists("overlay-images")) dir.create("overlay-images")
-if(!dir.exists("segmented-images")) dir.create("segmented-images")
+if(!dir.exists("input")) dir.create("input")
+if(!dir.exists("output/bf-analysis/grid-cellularities") & grid_output) dir.create("output/bf-analysis/grid-cellularities")
+if(!dir.exists("output/bf-analysis/bf-normalised")) dir.create("output/bf-analysis/bf-normalised")
+if(!dir.exists("output/bf-analysis/bf-overlay")) dir.create("output/bf-analysis/bf-overlay")
+if(!dir.exists("output/bf-analysis/bf-segmented")) dir.create("output/bf-analysis/bf-segmented")
 
 
 # ==========================================================================
@@ -596,18 +596,18 @@ filetype.test <- function(file, extension) {
 	str_detect(file, paste0(".", extension, "$")) %>% vector.OR()
 }
 
-image_file_contents <- list.files(path = "input-images", recursive = TRUE, full.names = TRUE)
+image_file_contents <- list.files(path = "input", recursive = TRUE, full.names = TRUE)
 
 if(auto_lif_detect) {
 	# input format can be lif or tif
 	input_format <- "lif"
 } else {
-	image_file_contents <- list.files(path = "input-images", recursive = TRUE, full.names = TRUE)
+	image_file_contents <- list.files(path = "input", recursive = TRUE, full.names = TRUE)
 
 	compatible_types <- c("lif", "tif", "tiff", "png", "jpeg", "jpg")
 
 	if(length(image_file_contents) == 0) {
-		shinyalert("File input-images is empty", "Please add images or lifs", type = "error")
+		shinyalert("File input is empty", "Please add images or lifs", type = "error")
 		return(NULL)
 	}
 	if(!sapply(X = compatible_types, FUN = filetype.test, file = image_file_contents) %>% vector.XOR()) {
@@ -655,7 +655,7 @@ rv$input_format <- input_format
 
 if(input_format == "lif") {
 
-lif_dirs <- list.files(path = "input-images", pattern = "lif$", recursive = TRUE, full.names = TRUE) 
+lif_dirs <- list.files(path = "input", pattern = "lif$", recursive = TRUE, full.names = TRUE) 
 
 image_names <- c()
 lif_lengths <- c()
@@ -689,7 +689,7 @@ for(i in c(1:length(lif_dirs))) {
 }
 } else {
 
-images <- list.files(path = "input-images", pattern = input_format, recursive = TRUE, full.names = TRUE) 
+images <- list.files(path = "input", pattern = input_format, recursive = TRUE, full.names = TRUE) 
 
 rv$images <- images
 
@@ -709,12 +709,12 @@ rv$image_names <- image_names
 # Check output file isn't open
 # ==========================================================================
 
-unwriteable <- check.writeable("cellularities.csv")
+unwriteable <- check.writeable("output/bf-analysis/cellularities.csv")
 if(unwriteable) return(NULL)
 rm(unwriteable)
 
 if(grid_output) {
-	unwriteable <- invisible(sapply(paste0("grid-cellularities/", image_names, " ", grid_no, "x", grid_no, " grid.csv"), FUN = check.writeable.grid))
+	unwriteable <- invisible(sapply(paste0("output/bf-analysis/grid-cellularities/", image_names, " ", grid_no, "x", grid_no, " grid.csv"), FUN = check.writeable.grid))
 	if(unwriteable %>% vector.OR()) return(NULL)
 	rm(unwriteable)
 }
@@ -749,8 +749,8 @@ incProgress(1/length(image_names), message = paste0(image_names[j]))
 	save(j, file = "j.rdata")
 
 if(!(change_grid_no & grid_output)) {
-if(file.exists(paste0("normalised-images/", image_names[j], " normalised.", desired_output_format))) {
-	pre_normalised <- readImage(paste0("normalised-images/", image_names[j], " normalised.", desired_output_format))
+if(file.exists(paste0("output/bf-analysis/bf-normalised/", image_names[j], " normalised.", desired_output_format))) {
+	pre_normalised <- readImage(paste0("output/bf-analysis/bf-normalised/", image_names[j], " normalised.", desired_output_format))
 	if(!((dim(pre_normalised) == dim(m_bf)) %>% vector.AND())) source("scripts/01a_remove_gradient.r")
 	rm("pre_normalised")
 } else {source("scripts/01a_remove_gradient.r")}
@@ -865,11 +865,11 @@ cat("desired_output_format is ", desired_output_format, "\n")
 # ==========================================================================
 
 
-if(!dir.exists("input-images")) dir.create("input-images")
-if(!dir.exists("grid-cellularities") & grid_output) dir.create("grid-cellularities")
-if(!dir.exists("normalised-images")) dir.create("normalised-images")
-if(!dir.exists("overlay-images")) dir.create("overlay-images")
-if(!dir.exists("segmented-images")) dir.create("segmented-images")
+if(!dir.exists("input")) dir.create("input")
+if(!dir.exists("output/bf-analysis/grid-cellularities") & grid_output) dir.create("output/bf-analysis/grid-cellularities")
+if(!dir.exists("output/bf-analysis/bf-normalised")) dir.create("output/bf-analysis/bf-normalised")
+if(!dir.exists("output/bf-analysis/bf-overlay")) dir.create("output/bf-analysis/bf-overlay")
+if(!dir.exists("output/bf-analysis/bf-segmented")) dir.create("output/bf-analysis/bf-segmented")
 
 
 # ==========================================================================
@@ -904,10 +904,10 @@ filetype.test <- function(file, extension) {
 	str_detect(file, paste0(".", extension, "$")) %>% vector.OR()
 }
 
-image_file_contents <- list.files(path = "input-images", recursive = TRUE, full.names = TRUE)
+image_file_contents <- list.files(path = "input", recursive = TRUE, full.names = TRUE)
 
 if(length(image_file_contents) == 0) {
-	shinyalert("File input-images is empty", "Please add images or lifs", type = "error")
+	shinyalert("File input is empty", "Please add images or lifs", type = "error")
 	return(NULL)
 }
 if(str_detect(image_file_contents, ".tif$") %>% vector.OR() && !str_detect(image_file_contents, ".(tiff)|(jpeg)|(jpg)|(png)|(lif)$") %>% vector.AND()) {
@@ -954,7 +954,7 @@ rv$input_format <- input_format
 
 if(input_format == "lif") {
 
-lif_dirs <- list.files(path = "input-images", pattern = "lif$", recursive = TRUE, full.names = TRUE) 
+lif_dirs <- list.files(path = "input", pattern = "lif$", recursive = TRUE, full.names = TRUE) 
 
 
 image_names <- c()
@@ -989,7 +989,7 @@ for(i in c(1:length(lif_dirs))) {
 }
 } else {
 
-images <- list.files(path = "input-images", pattern = input_format, recursive = TRUE, full.names = TRUE) 
+images <- list.files(path = "input", pattern = input_format, recursive = TRUE, full.names = TRUE) 
 
 rv$images <- images
 
@@ -1010,15 +1010,15 @@ rv$image_names <- image_names
 # ==========================================================================
 
 
-unwriteable <- check.writeable("cellularities.csv")
+unwriteable <- check.writeable("output/bf-analysis/cellularities.csv")
 if(unwriteable) return(NULL)
 rm(unwriteable)
 
-if(grid_output) invisible(sapply(paste0("grid-cellularities/", image_names, " ", grid_no, "x", grid_no, " grid.csv"), FUN = check.writeable.grid))
+if(grid_output) invisible(sapply(paste0("output/bf-analysis/grid-cellularities/", image_names, " ", grid_no, "x", grid_no, " grid.csv"), FUN = check.writeable.grid))
 
 
-if(file.exists("cellularities.csv")) {
-	auto_cellularities <- read.csv("cellularities.csv")
+if(file.exists("output/bf-analysis/cellularities.csv")) {
+	auto_cellularities <- read.csv("output/bf-analysis/cellularities.csv")
 	} else {
 	auto_cellularities <- data.frame(matrix(ncol = 3, nrow = length(image_names)))
 }
@@ -1053,8 +1053,8 @@ j <- rv$image_no
 	save(j, file = "j.rdata")
 
 if(!(change_grid_no & grid_output)) {
-if(file.exists(paste0("normalised-images/", image_names[j], " normalised.", desired_output_format))) {
-	pre_normalised <- readImage(paste0("normalised-images/", image_names[j], " normalised.", desired_output_format))
+if(file.exists(paste0("output/bf-analysis/bf-normalised/", image_names[j], " normalised.", desired_output_format))) {
+	pre_normalised <- readImage(paste0("output/bf-analysis/bf-normalised/", image_names[j], " normalised.", desired_output_format))
 	if(!((dim(pre_normalised) == dim(m_bf)) %>% vector.AND())) source("scripts/01a_remove_gradient.r")
 	rm("pre_normalised")
 } else {source("scripts/01a_remove_gradient.r")}
@@ -1072,7 +1072,7 @@ auto_cellularities[j,] <- c(image_names[j], print(computer_cellularity), case_wh
 file.remove("m_bf.rdata")
 file.remove("j.rdata")
 
-write.csv(auto_cellularities, "cellularities.csv", row.names = FALSE)
+write.csv(auto_cellularities, "output/bf-analysis/cellularities.csv", row.names = FALSE)
 
 file.remove("image_names.rdata")
 file.remove("blur.rdata")
