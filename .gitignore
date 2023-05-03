@@ -47,8 +47,11 @@ grid-cellularities/
 
 normalised-images/
 
-segmented/
-overlay/
+segmented-images/
+overlay-images/
+overlay-gfp-images/
+segmented-gfp-images/
+gfp-cell-stats/
 99_cellularity_report_files/
 
 brightfield-images/reports/
@@ -58,3 +61,4 @@ human_cellularities.csv
 human_cellularities_fixed.csv
 cellularities.csv
 cellularities_test.csv
+gfp_overall_stats.csv

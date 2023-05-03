@@ -7,7 +7,7 @@ source("r_clear_and_load.r")
 use_segmented_bf <- TRUE
 input_image_type <- "gfp"
 
-brighten <- 0.04
+brighten <- 0.8
 blur <- 1
 cut_off <- 0.45
 min_cell_size <- 0.00013
@@ -195,20 +195,19 @@ segmented <- get(paste0("image_", bf_names[row_num] %>% str_replace_all(" ", "_"
 
 gfp_cut_top <- gfp
 
-
 gfp_cut_top[gfp_cut_top > brighten] <- brighten
 
 gfp_cut_top <- gfp_cut_top*(1/brighten)
 
 plot(gfp_cut_top)
 
-GMM()
 
 gfp_b <- gblur(gfp_cut_top, blur)
 plot(gfp_b)
 
 
-gfp_t <- gfp_b
+#gfp_t <- gfp_b
+gfp_t <- gfp_cut_top
 
 gfp_t[gfp_t > cut_off] <- 1
 gfp_t[gfp_t <= cut_off] <- 0
@@ -223,9 +222,9 @@ gfp_rms <- fillHull(gfp_rms)
 plot(gfp_rms)
 
 gfp_rois <- computeFeatures.moment(gfp_rms)
-if(is.null(gfp_rois)) stop("Acellular image")
-centroids <- round(gfp_rois[, c("m.cy","m.cx")])
-
+if(!is.null(gfp_rois)) {
+	centroids <- round(gfp_rois[, c("m.cy","m.cx")])
+}
 
 gfp_overlay <- gfp_cut_top
 gfp_overlay[,,1] <- 0
@@ -233,6 +232,7 @@ gfp_overlay[,,3] <- bf[,,3]
 gfp_overlay[,,1] <- gfp_rms
 
 plot(gfp_overlay)
+
 
 # % cellular area fluorescing ===========================================================
 cat("% cellular area fluorescing\n")
@@ -247,34 +247,39 @@ cat("percentage of cellular area fluorescing is ", round(perc_fluorescing, 2), "
 # Get general stats =============================================================
 cat("Get general stats\n")
 
-hist_data_cell <- data.frame(fluo = gfp[gfp_rms == 1], type = "cell")
-hist_data_all <- data.frame(fluo = matrix(gfp), type = "all")
-
-hist_data <- rbind(hist_data_cell, hist_data_all)
-
-hist_data %>%
-ggplot(aes(x = fluo)) + 
-    geom_density(alpha = 0.3) +
-    xlab("Brightness") +
-    facet_grid(vars(type), scales = "free_y")
+if(!is.null(gfp_rois)) {
+	hist_data_cell <- data.frame(fluo = gfp[gfp_rms == 1], type = "cell")
+	hist_data_all <- data.frame(fluo = matrix(gfp), type = "all")
+	
+	hist_data <- rbind(hist_data_cell, hist_data_all)
+	
+	hist_data %>%
+	ggplot(aes(x = fluo)) + 
+	    geom_density(alpha = 0.3) +
+	    xlab("Brightness") +
+	    facet_grid(vars(type), scales = "free_y")
 
 gfp_overall_stats[row_num,] <- c(gfp_names[row_num], perc_fluorescing, mean(gfp[gfp_rms == 1]), sd(gfp[gfp_rms == 1]))
 
-cell_stats <- matrix(ncol = 5, nrow = nrow(centroids))
+if(is.null(nrow(centroids))) {
+	cell_stats <- matrix(ncol = 5, nrow = 1)
+	cell_stats[,] <- c(1, mean(gfp[gfp_rms == 1]), sd(gfp[gfp_rms == 1]), gfp_rois[,"m.cx"], gfp_rois[,"m.cy"])
+} else {
+	cell_stats <- matrix(ncol = 5, nrow = nrow(centroids))
+	for (i in 1:nrow(centroids)) {
+		gfp_bw <- bwlabel(gfp_rms)
+		sel_cell <- which(as.numeric(rownames(gfp_rois)) != i)
+		gfp_cell <- rmObjects(gfp_bw, sel_cell)
+		
+		cell_stats[i,] <- c(i, mean(gfp[gfp_cell == 1]), sd(gfp[gfp_cell == 1]), gfp_rois[i,"m.cx"], gfp_rois[i,"m.cy"])
+	}
+}
 colnames(cell_stats) <- c("cell_no", "mean_brightness", "sd_brightness", "x", "y (top to bottom)")
 
-for (i in 1:nrow(centroids)) {
 
-	gfp_bw <- bwlabel(gfp_rms)
-	sel_cell <- which(as.numeric(rownames(gfp_rois)) != i)
-	gfp_cell <- rmObjects(gfp_bw, sel_cell)
-	
-	
-	cell_stats[i,] <- c(i, mean(gfp[gfp_cell == 1]), sd(gfp[gfp_cell == 1]), gfp_rois[i,"m.cx"], gfp_rois[i,"m.cy"])
-
-}
 print(cell_stats)
 write.csv(cell_stats, file = paste0("gfp-cell-stats/", gfp_names[row_num], " stats.csv"))
+}
 writeImage(gfp_overlay, paste0("overlay-gfp-images/", gfp_names[row_num], " overlay.", desired_output_format))
 writeImage(gfp_rms, paste0("segmented-gfp-images/", gfp_names[row_num], " segmented.", desired_output_format))
 }

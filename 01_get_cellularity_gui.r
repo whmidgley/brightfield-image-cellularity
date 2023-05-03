@@ -1,5 +1,5 @@
 
-source("r_clear_and_load.r")
+source("scripts/r_clear_and_load.r")
 library(shiny)
 library(shinyjs)
 library(shinyWidgets)
@@ -751,15 +751,15 @@ incProgress(1/length(image_names), message = paste0(image_names[j]))
 if(!(change_grid_no & grid_output)) {
 if(file.exists(paste0("normalised-images/", image_names[j], " normalised.", desired_output_format))) {
 	pre_normalised <- readImage(paste0("normalised-images/", image_names[j], " normalised.", desired_output_format))
-	if(!((dim(pre_normalised) == dim(m_bf)) %>% vector.AND())) source("01a_remove_gradient.r")
+	if(!((dim(pre_normalised) == dim(m_bf)) %>% vector.AND())) source("scripts/01a_remove_gradient.r")
 	rm("pre_normalised")
-} else {source("01a_remove_gradient.r")}
+} else {source("scripts/01a_remove_gradient.r")}
 
-source("01b_detect_edges.r")
-source("01c_cut_off.r")
+source("scripts/01b_detect_edges.r")
+source("scripts/01c_cut_off.r")
 }
 if(grid_output) {
-source("01d_by_grid.r")
+source("scripts/01d_by_grid.r")
 }
 if(!(change_grid_no & grid_output)) {
 auto_cellularities[j,] <- c(image_names[j], print(computer_cellularity), case_when((1-prop_background_edge)*100 > flag_thresh ~ "CHECK OUTLINE",
@@ -1055,15 +1055,15 @@ j <- rv$image_no
 if(!(change_grid_no & grid_output)) {
 if(file.exists(paste0("normalised-images/", image_names[j], " normalised.", desired_output_format))) {
 	pre_normalised <- readImage(paste0("normalised-images/", image_names[j], " normalised.", desired_output_format))
-	if(!((dim(pre_normalised) == dim(m_bf)) %>% vector.AND())) source("01a_remove_gradient.r")
+	if(!((dim(pre_normalised) == dim(m_bf)) %>% vector.AND())) source("scripts/01a_remove_gradient.r")
 	rm("pre_normalised")
-} else {source("01a_remove_gradient.r")}
+} else {source("scripts/01a_remove_gradient.r")}
 
-source("01b_detect_edges.r")
-source("01c_cut_off.r")
+source("scripts/01b_detect_edges.r")
+source("scripts/01c_cut_off.r")
 }
 if(grid_output) {
-source("01d_by_grid.r")
+source("scripts/01d_by_grid.r")
 }
 if(!(change_grid_no & grid_output)) {
 auto_cellularities[j,] <- c(image_names[j], print(computer_cellularity), case_when((1-prop_background_edge)*100 > flag_thresh ~ "CHECK OUTLINE",

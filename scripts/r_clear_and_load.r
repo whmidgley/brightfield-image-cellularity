@@ -53,8 +53,8 @@ pkgs <- c(
 	"EBImage",
 	"RBioFormats",
 	"readr",
-	"stringr"
-	"ClusterR"
+	"stringr",
+	"mclust"
 	)
 
 for (pkg in pkgs) {
