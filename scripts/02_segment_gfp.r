@@ -11,16 +11,28 @@ brighten <- 0.04
 blur <- 1
 cut_off <- 0.45
 min_cell_size <- 0.00013
+cell_output <- TRUE
+grid_output <- TRUE
+change_grid_no <- FALSE
+grid_no <- 4
 
+
+if(change_grid_no) {
+	cell_output <- FALSE
+	grid_output <- TRUE
+}
 
 # ==========================================================================
 # Check folders exist
 # ==========================================================================
 
 if(!dir.exists("input")) dir.create("input")
+if(!dir.exists("output")) dir.create("output")
+if(!dir.exists("output/gfp-analysis")) dir.create("output/gfp-analysis")
 if(!dir.exists("output/gfp-analysis/gfp-segmented")) dir.create("output/gfp-analysis/gfp-segmented")
 if(!dir.exists("output/gfp-analysis/gfp-overlay")) dir.create("output/gfp-analysis/gfp-overlay")	
-if(!dir.exists("output/gfp-analysis/cell-stats")) dir.create("output/gfp-analysis/cell-stats")
+if(!dir.exists("output/gfp-analysis/cell-stats") & cell_output) dir.create("output/gfp-analysis/cell-stats")
+if(!dir.exists("output/gfp-analysis/grid-stats") & grid_output) dir.create("output/gfp-analysis/grid-stats")
 
 # ==========================================================================
 # File formats
@@ -162,7 +174,8 @@ colnames(gfp_overall_stats) <- c("Name", "Percentage cellular area fluorescing",
 
 check.writeable("output/gfp-analysis/overall_stats.csv")
 
-invisible(sapply(paste0("output/gfp-analysis/cell-stats/", gfp_names, " stats.csv"), FUN = check.writeable.grid))
+if(cell_output) invisible(sapply(paste0("output/gfp-analysis/cell-stats/", gfp_names, " stats.csv"), FUN = check.writeable.grid))
+if(grid_output) invisible(sapply(paste0("output/gfp-analysis/grid-stats/", gfp_names[row_num], " ", grid_no, "x", grid_no, " grid stats.csv"), FUN = check.writeable.grid))
 
 
 # ==========================================================================
@@ -171,22 +184,10 @@ invisible(sapply(paste0("output/gfp-analysis/cell-stats/", gfp_names, " stats.cs
 
 for(row_num in 1:length(gfp_names)) {
 
-for(i in bf_names) {
-if(paste0(i, " normalised.", desired_output_format) %in% list.files("output/bf-analysis/bf-normalised")) {
-	assign(paste0("image_", i %>% str_replace_all(" ", "_"), "_normalised"),
-	readImage(paste0("output/bf-analysis/bf-normalised/", i, " normalised.", desired_output_format))
-	)
-} else {
-	bf_copy <- i
-	i <- i %>% str_replace_all("BF", "Image")
-	if(paste0(i, " normalised.", desired_output_format) %in% list.files("output/bf-analysis/bf-normalised")) {
-		assign(paste0("image_", i %>% str_replace_all("Image", "BF") %>% str_replace_all(" ", "_"), "_normalised"),
-		readImage(paste0("output/bf-analysis/bf-normalised/", i, " normalised.", desired_output_format))
-		)
-	}
-	i <- bf_copy
-}
+if(!change_grid_no) {
 
+
+for(i in bf_names) {
 if(paste0(i, " segmented.", desired_output_format) %in% list.files("output/bf-analysis/bf-segmented")) {
 	assign(paste0("image_", i %>% str_replace_all(" ", "_"), "_segmented"),
 	readImage(paste0("output/bf-analysis/bf-segmented/", i, " segmented.", desired_output_format))
@@ -198,14 +199,15 @@ if(paste0(i, " segmented.", desired_output_format) %in% list.files("output/bf-an
 		assign(paste0("image_", i %>% str_replace_all("Image", "BF") %>% str_replace_all(" ", "_"), "_segmented"),
 		readImage(paste0("output/bf-analysis/bf-segmented/", i, " segmented.", desired_output_format))
 		)
+	} else {
+		stop("Cellular area has not been determined. Please run cellularity script on these images")
 	}
 	i <- bf_copy
 }
 }
 gfp <- get(paste0("image_", gfp_names[row_num] %>% str_replace_all(" ", "_")))
 bf <- get(paste0("image_", bf_names[row_num] %>% str_replace_all(" ", "_")))
-normalised <- get(paste0("image_", bf_names[row_num] %>% str_replace_all(" ", "_"), "_normalised"))
-segmented <- get(paste0("image_", bf_names[row_num] %>% str_replace_all(" ", "_"), "_segmented"))
+bf_segmented <- get(paste0("image_", bf_names[row_num] %>% str_replace_all(" ", "_"), "_segmented"))
 
 
 gfp_cut_top <- gfp
@@ -225,7 +227,11 @@ gfp_t <- gfp_b
 
 gfp_t[gfp_t > cut_off] <- 1
 gfp_t[gfp_t <= cut_off] <- 0
+
+gfp_t[bf_segmented == 0] <- 0
+
 plot(gfp_t)
+
 
 
 gfp_bw <- bwlabel(gfp_t[,,1])
@@ -254,7 +260,7 @@ cat("% cellular area fluorescing\n")
 gfp_rms[gfp_rms > 1] <- 1
 gfp_rms[gfp_rms < 1] <- 0
 
-perc_fluorescing <- sum(gfp_rms)*100/sum(segmented)
+perc_fluorescing <- sum(gfp_rms)*100/sum(bf_segmented)
 
 cat("percentage of cellular area fluorescing is ", round(perc_fluorescing, 2), "%\n")
 
@@ -274,7 +280,15 @@ if(!is.null(gfp_rois)) {
 	    facet_grid(vars(type), scales = "free_y")
 
 gfp_overall_stats[row_num,] <- c(gfp_names[row_num], perc_fluorescing, mean(gfp[gfp_rms == 1]), sd(gfp[gfp_rms == 1]))
+} else {
+	gfp_overall_stats[row_num,] <- c(gfp_names[row_num], perc_fluorescing, mean(gfp[gfp_rms == 1]), sd(gfp[gfp_rms == 1]))
+}
 
+
+# Get cellular stats ============================================================
+if(cell_output) {
+cat("Get cellular stats\n")
+if(!is.null(gfp_rois)) {
 if(is.null(nrow(centroids))) {
 	cell_stats <- matrix(ncol = 5, nrow = 1)
 	cell_stats[,] <- c(1, mean(gfp[gfp_rms == 1]), sd(gfp[gfp_rms == 1]), gfp_rois[,"m.cx"], gfp_rois[,"m.cy"])
@@ -292,9 +306,64 @@ colnames(cell_stats) <- c("cell_no", "mean_brightness", "sd_brightness", "x", "y
 
 
 print(cell_stats)
-write.csv(cell_stats, file = paste0("output/gfp-analysis/cell-stats/", gfp_names[row_num], " stats.csv"))
+write.csv(cell_stats, file = paste0("output/gfp-analysis/cell-stats/", gfp_names[row_num], " stats.csv"), row.names = FALSE)
+}
 }
 writeImage(gfp_overlay, paste0("output/gfp-analysis/gfp-overlay/", gfp_names[row_num], " overlay.", desired_output_format))
 writeImage(gfp_rms, paste0("output/gfp-analysis/gfp-segmented/", gfp_names[row_num], " segmented.", desired_output_format))
+
+} # change_grid_no close
+
+if(change_grid_no) gfp_rois <- "placeholder"
+
+# Grid output ===================================================================
+if(!is.null(gfp_rois)) {
+if(grid_output) {
+cat("Grid output\n")
+
+if(change_grid_no) {
+	gfp <- get(paste0("image_", gfp_names[row_num] %>% str_replace_all(" ", "_")))
+
+	if(file.exists(paste0("output/gfp-analysis/gfp-segmented/", gfp_names[row_num], " segmented.", desired_output_format))) {
+    	gfp_segmented <- readImage(paste0("output/gfp-analysis/gfp-segmented/", gfp_names[row_num], " segmented.", desired_output_format))
+    } else stop("No gfp segmented image found. Please run full script")
+    
+    if(file.exists(paste0("output/bf-analysis/bf-segmented/", bf_names[row_num], " segmented.", desired_output_format))) {
+    	bf_segmented <- readImage(paste0("output/bf-analysis/bf-segmented/", bf_names[row_num], " segmented.", desired_output_format))
+	} else stop("No bf segmented image found. Please run cellularity script")
+} else gfp_segmented <- gfp_rms
+
+if (nrow(gfp_segmented) %% grid_no != 0) {
+	warning("Number of edge segments is not a factor of the edge length of image.\nResizing image accordingly...\n")
+	new_size <- nrow(gfp_segmented) - (nrow(gfp_segmented) %% grid_no)
+	gfp_segmented <- resize(gfp_segmented, w = new_size, h = new_size)
 }
-write.csv(gfp_overall_stats, file = "output/gfp-analysis/overall_stats.csv")
+
+gfp <- gfp[,,1]
+
+grid_size <- nrow(gfp_segmented) / grid_no
+
+gfp_split <- matsplitter(gfp, grid_size, grid_size)
+gfp_seg_split <- matsplitter(gfp_segmented, grid_size, grid_size)
+bf_seg_split <- matsplitter(bf_segmented, grid_size, grid_size)
+
+d_stats_grid <- matrix(ncol = 5, nrow = grid_no^2)
+colnames(d_stats_grid) <- c("Grid x (L>R)", "Grid y (U>D)", "Percentage cells fluorescing", "Mean brightness", "SD in brightness")
+
+for(roi in 1:grid_no^2) {
+	d_stats_grid[roi,1] <- ceiling(roi/grid_no)
+	if(roi %% grid_no == 0) {
+		d_stats_grid[roi,2] <- 4
+	} else {
+		d_stats_grid[roi,2] <- roi %% grid_no
+	}
+	d_stats_grid[roi,3:5] <- calc.fluro.stats(gfp_split[,,roi], gfp_seg_split[,,roi], bf_seg_split[,,roi])
+}
+write.csv(d_stats_grid, file = paste0("output/gfp-analysis/grid-stats/", gfp_names[row_num], " ", grid_no, "x", grid_no, " grid stats.csv"), row.names = FALSE)
+
+}
+}
+}
+if(!change_grid_no){
+	write.csv(gfp_overall_stats, file = "output/gfp-analysis/overall_stats.csv", row.names = FALSE)
+}

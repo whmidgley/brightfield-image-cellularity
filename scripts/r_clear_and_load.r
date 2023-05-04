@@ -53,12 +53,7 @@ pkgs <- c(
 	"EBImage",
 	"RBioFormats",
 	"readr",
-<<<<<<< HEAD:r_clear_and_load.r
 	"stringr"
-=======
-	"stringr",
-	"mclust"
->>>>>>> 6-tidy-for-gui:scripts/r_clear_and_load.r
 	)
 
 for (pkg in pkgs) {
@@ -139,4 +134,38 @@ check.writeable.grid <- function(input_file) {
 			} else {return(FALSE)}
 		} else {return(FALSE)}
 	} else {return(FALSE)}
+}
+
+
+matsplitter <- function(m, r, c) {
+    rg <- (row(m)-1)%/%r+1
+    cg <- (col(m)-1)%/%c+1
+    cri <- (rg-1)*max(cg) + cg
+    n <- prod(dim(m))/c/r
+    cv <- unlist(lapply(1:n, function(x) m[cri==x]))
+    dim(cv)<-c(r,c,n)
+    cv
+}
+
+calc.cellularity <- function(mat_seg) {
+
+    prop_background_seg <-
+  		mat_seg[mat_seg == 0] %>%
+    	length() / nrow(mat_seg)^2
+
+    comp_cell <-
+    	(1-prop_background_seg)*100
+    return(comp_cell)
+}
+
+calc.fluro.stats <- function(gfp_mat_seg, gfp_mat_seg_segd, bf_mat_seg_segd) {
+	fluro_prop <- sum(gfp_mat_seg_segd)*100/sum(bf_mat_seg_segd)
+	fluro_mean <- mean(gfp_mat_seg[gfp_mat_seg_segd == 1], na.rm = TRUE)
+	fluro_sd <- sd(gfp_mat_seg[gfp_mat_seg_segd == 1], na.rm = TRUE)
+	fluro_stats <- c(
+		fluro_prop,
+		fluro_mean,
+		fluro_sd
+		)
+	return(fluro_stats)
 }

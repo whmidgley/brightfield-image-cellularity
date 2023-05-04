@@ -1,5 +1,5 @@
 
-source("r_clear_and_load.r")
+source("scripts/r_clear_and_load.r")
 
 # ==========================================================================
 # Variables
@@ -49,6 +49,8 @@ if(!grid_output & change_grid_no) warning("grid_output is FALSE but change_grid_
 # ==========================================================================
 
 if(!dir.exists("input")) dir.create("input")
+if(!dir.exists("output")) dir.create("output")
+if(!dir.exists("output/bf-analysis")) dir.create("output/bf-analysis")
 if(!dir.exists("output/bf-analysis/grid-cellularities") & grid_output) dir.create("output/bf-analysis/grid-cellularities")
 if(!dir.exists("output/bf-analysis/bf-normalised")) dir.create("output/bf-analysis/bf-normalised")
 if(!dir.exists("output/bf-analysis/bf-overlay")) dir.create("output/bf-analysis/bf-overlay")

@@ -49,11 +49,7 @@ grid-cellularities/
 
 bf-normalised/
 
-bf-segmented/
-bf-overlay/
-gfp-overlay/
-gfp-segmented/
-cell-stats/
+output/
 99_cellularity_report_files/
 
 brightfield-images/reports/
