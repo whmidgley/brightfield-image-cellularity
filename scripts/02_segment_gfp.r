@@ -11,6 +11,11 @@ brighten <- 0.04
 blur <- 1
 cut_off <- 0.45
 min_cell_size <- 0.00013
+
+remove_if_eccentric <- TRUE
+min_cell_size_eccen <- 0.0002
+max_eccen <- 0.9
+
 cell_output <- TRUE
 grid_output <- TRUE
 change_grid_no <- FALSE
@@ -238,8 +243,17 @@ gfp_bw <- bwlabel(gfp_t[,,1])
 gfp_cfs <- computeFeatures.shape(gfp_bw)
 sels <- which(gfp_cfs[,"s.area"] < nrow(gfp)^2*min_cell_size)
 gfp_rms <- rmObjects(gfp_bw, sels) 
-gfp_rms <- fillHull(gfp_rms)
 plot(gfp_rms)
+
+
+if(remove_if_eccentric) {
+gfp_bw <- bwlabel(gfp_rms)
+gfp_cfs <- computeFeatures.shape(gfp_bw)
+gfp_cfm <- computeFeatures.moment(gfp_bw)
+sels <- which(gfp_cfs[,"s.area"] < nrow(gfp)^2*min_cell_size_eccen & gfp_cfm[,"m.eccentricity"] > max_eccen)
+gfp_rms <- rmObjects(gfp_bw, sels) 
+plot(gfp_rms)
+}
 
 gfp_rois <- computeFeatures.moment(gfp_rms)
 if(!is.null(gfp_rois)) {
