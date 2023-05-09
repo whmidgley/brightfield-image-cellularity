@@ -43,6 +43,15 @@ if(!is.null(names(sessionInfo()$otherPkgs))) {
 			)
 	)
 }
+
+# ==========================================================================
+# Clear loaded packages
+# ==========================================================================
+if(!is.null(sessionInfo()$otherPkgs)){
+	suppressWarnings(
+		invisible(lapply(paste0('package:', names(sessionInfo()$otherPkgs)), detach, character.only=TRUE, unload=TRUE))
+	)
+}
 # ==========================================================================
 # Load
 # ==========================================================================
@@ -112,8 +121,12 @@ check.writeable <- function(input_file) {
 			try_cellularities <- read.csv(input_file)
 			try_cellularities <- suppressWarnings(try(write.csv(try_cellularities, input_file, row.names = FALSE), silent = TRUE))
 			if(!is.null(try_cellularities)) {
+				if( "shiny" %in% names(sessionInfo()$otherPkgs)) {
 				shinyalert(paste0(input_file, " is open"), "please close in order to write over it.\n
 					If you want to save the last run, please make a copy by another name", type = "error")
+				} else {
+					stop(paste0(input_file, " is open. Please close in order to write over it. If you want to save the last run, please make a copy by another name"))
+				}
 				return(TRUE)
 			} else {return(FALSE)}
 		} else {return(FALSE)}
@@ -128,8 +141,12 @@ check.writeable.grid <- function(input_file) {
 			try_cellularities <- read.csv(input_file, header = FALSE)
 			try_cellularities <- suppressWarnings(try(write.table(try_cellularities, input_file, row.names = FALSE, col.names = FALSE, sep = ","), silent = TRUE))
 			if(!is.null(try_cellularities)) {
+				if( "shiny" %in% names(sessionInfo()$otherPkgs)) {
 				shinyalert(paste0(input_file, " is open"), "please close in order to write over it.\n
 					If you want to save the last run, please make a copy by another name", type = "error")
+				} else {
+					stop(paste0(input_file, " is open. Please close in order to write over it. If you want to save the last run, please make a copy by another name"))
+				}
 				return(TRUE)
 			} else {return(FALSE)}
 		} else {return(FALSE)}

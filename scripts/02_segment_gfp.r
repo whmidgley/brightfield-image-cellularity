@@ -10,10 +10,10 @@ input_image_type <- "gfp"
 brighten <- 0.04
 blur <- 1
 cut_off <- 0.45
-min_cell_size <- 0.00013
+min_cell_size <- 0.13
 
 remove_if_eccentric <- TRUE
-min_cell_size_eccen <- 0.0002
+min_cell_size_eccen <- 0.2
 max_eccen <- 0.9
 
 cell_output <- TRUE
@@ -21,6 +21,12 @@ grid_output <- TRUE
 change_grid_no <- FALSE
 grid_no <- 4
 
+
+#  ==============================================================================
+
+blur <- blur/1024
+min_cell_size <- min_cell_size/1024
+min_cell_size_eccen <- min_cell_size_eccen/1024
 
 if(change_grid_no) {
 	cell_output <- FALSE
@@ -224,7 +230,7 @@ gfp_cut_top <- gfp_cut_top*(1/brighten)
 plot(gfp_cut_top)
 
 
-gfp_b <- gblur(gfp_cut_top, blur)
+gfp_b <- gblur(gfp_cut_top, blur*nrow(gfp_cut_top))
 plot(gfp_b)
 
 
