@@ -373,13 +373,51 @@ colnames(d_stats_grid) <- c("Grid x (L>R)", "Grid y (U>D)", "Percentage cells fl
 for(roi in 1:grid_no^2) {
 	d_stats_grid[roi,1] <- ceiling(roi/grid_no)
 	if(roi %% grid_no == 0) {
-		d_stats_grid[roi,2] <- 4
+		d_stats_grid[roi,2] <- grid_no
 	} else {
 		d_stats_grid[roi,2] <- roi %% grid_no
 	}
 	d_stats_grid[roi,3:5] <- calc.fluro.stats(gfp_split[,,roi], gfp_seg_split[,,roi], bf_seg_split[,,roi])
 }
 write.csv(d_stats_grid, file = paste0("output/gfp-analysis/grid-stats/", gfp_names[row_num], " ", grid_no, "x", grid_no, " grid stats.csv"), row.names = FALSE)
+
+hist_data <- matrix(nrow = 256*grid_no^2, ncol = 4) %>% as.data.frame()
+colnames(hist_data) <- c("x", "y", "brightness", "count")
+hist_data[,1:3] <- expand.grid(c(1:grid_no), c(1:grid_no), seq(0,1, by = 1/255))
+
+
+for (i in 1:grid_no^2) {
+	counts <- table(gfp_split[,,i][gfp_seg_split[,,i] == 1]) %>% as.data.frame()
+	if(nrow(counts) > 0) {
+		counts_pretty <- matrix(ncol = 4, nrow = nrow(counts)) %>% as.data.frame()
+		colnames(counts_pretty) <- c("x", "y", "brightness", "count")
+		counts_pretty[,3:4] <- counts
+		counts_pretty[,1] <- ceiling(i/grid_no)
+		if(i %% grid_no == 0) {
+			counts_pretty[,2] <- grid_no
+		} else {
+			counts_pretty[,2] <- i %% grid_no
+		}
+		counts_pretty$brightness <- as.numeric(as.character(counts_pretty$brightness))
+	
+		counts_pretty <- left_join(hist_data, counts_pretty, by = c("x", "y", "brightness"))
+
+		counts_pretty$count.x[is.na(counts_pretty$count.x)] <- counts_pretty$count.y[is.na(counts_pretty$count.x)]
+		counts_pretty <- counts_pretty %>%
+			mutate(count = count.x) %>%
+			select(-count.x, -count.y)
+		hist_data <- counts_pretty
+	}		
+}
+
+grid_hist <-
+hist_data %>%
+	ggplot(aes(x = brightness, y = count)) +
+			geom_col(width = 1/255) +
+			labs(title = "Brightness distribution of fluorescing area by grid 0-1") +
+			facet_grid(y ~ x)
+
+print(grid_hist)
 
 }
 }
