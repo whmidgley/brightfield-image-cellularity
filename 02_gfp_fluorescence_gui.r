@@ -613,14 +613,20 @@ output$overall_dist <- renderPlot({
 
 
 output$grid_dist <- renderPlot({
-	req(rv$gfp_rms)
+	gfp_segmented <- req(rv$gfp_rms)
 	req(rv$gfp)
 	print("plotting grid hist")
 	gfp <- rv$gfp[,,1]
-	grid_size <- nrow(rv$gfp_rms) / input$grid_no
+	if (nrow(rv$gfp_rms) %% input$grid_no != 0) {
+	new_size <- nrow(rv$gfp_rms) - (nrow(rv$gfp_rms) %% input$grid_no)
+	gfp_segmented <- resize(rv$gfp_rms, w = new_size, h = new_size)
+	gfp <- resize(gfp, w = new_size, h = new_size)
+	}
+	
+	grid_size <- nrow(gfp_segmented) / input$grid_no
 	
 	gfp_split <- matsplitter(gfp, grid_size, grid_size)
-	gfp_seg_split <- matsplitter(rv$gfp_rms, grid_size, grid_size)
+	gfp_seg_split <- matsplitter(gfp_segmented, grid_size, grid_size)
 
 	hist_data <- matrix(nrow = 256*input$grid_no^2, ncol = 4) %>% as.data.frame()
  	colnames(hist_data) <- c("x", "y", "brightness", "count")
@@ -662,16 +668,19 @@ output$grid_dist <- renderPlot({
 
 output$grid_overlay <- renderPlot({
 	gfp_grid_overlay <- req(rv$gfp_overlay)
+	gfp_grid_overlay[gfp_grid_overlay > 1] <- 1
 	grid_size <- req(rv$grid_size)
+
+	if (nrow(gfp_grid_overlay) %% input$grid_no != 0) {
+	warning("Number of edge segments is not a factor of the edge length of image.\nResizing image accordingly...\n")
+	new_size <- nrow(gfp_grid_overlay) - (nrow(gfp_grid_overlay) %% input$grid_no)
+	gfp_grid_overlay <- resize(gfp_grid_overlay, w = new_size, h = new_size)
+}
 	
 	print("adding grid to overlay image")
 	for (grid_no_seq in 1:(input$grid_no-1)) {
-    gfp_grid_overlay[, c(floor(grid_no_seq*rv$grid_size), ceiling(grid_no_seq*rv$grid_size)), 1] <- 1
-    gfp_grid_overlay[c(floor(grid_no_seq*rv$grid_size), ceiling(grid_no_seq*rv$grid_size)), , 1] <- 1
-    gfp_grid_overlay[, c(floor(grid_no_seq*rv$grid_size), ceiling(grid_no_seq*rv$grid_size)), 2] <- 1
-    gfp_grid_overlay[c(floor(grid_no_seq*rv$grid_size), ceiling(grid_no_seq*rv$grid_size)), , 2] <- 1
-    gfp_grid_overlay[, c(floor(grid_no_seq*rv$grid_size), ceiling(grid_no_seq*rv$grid_size)), 3] <- 1
-    gfp_grid_overlay[c(floor(grid_no_seq*rv$grid_size), ceiling(grid_no_seq*rv$grid_size)), , 3] <- 1
+    gfp_grid_overlay[, c(floor(grid_no_seq*rv$grid_size):ceiling(grid_no_seq*rv$grid_size)),] <- 1
+    gfp_grid_overlay[c(floor(grid_no_seq*rv$grid_size):ceiling(grid_no_seq*rv$grid_size)), ,] <- 1
 	}
 	plot(Image(gfp_grid_overlay))
 })
