@@ -1,73 +1,5 @@
 
-# ==========================================================================
-# Setwd
-# ==========================================================================
-
-if (Sys.info()["user"] == "william.midgley") {
-  setwd("~/projects/brightfield-image-cellularity")
-} else if(Sys.info()["user"] == "molca") {
-  setwd("C:/Users/molca/OneDrive - Swansea University/ALR_PhD/Image Analysis Colaboration/brightfield-image-cellularity")
-} else {stop("please add wd")}
-
-suppressWarnings({
-file.remove("m_bf.rdata")
-file.remove("j.rdata")
-file.remove("image_names.rdata")
-file.remove("blur.rdata")
-file.remove("brightness_mean.rdata")
-file.remove("cut_off.rdata")
-file.remove("shrink_cutoff.rdata")
-file.remove("grid_output.rdata")
-file.remove("grid_no.rdata")
-file.remove("change_grid_no.rdata")
-file.remove("flag_thresh.rdata")
-file.remove("desired_output_format.rdata")
-})
-
-# ==========================================================================
-# Clear environment
-# ==========================================================================
-
-rm(list = ls())
-
-if(!is.null(names(sessionInfo()$otherPkgs))) {
-	suppressWarnings(
-		invisible(
-			lapply(
-				paste0("package:",
-					names(sessionInfo()$otherPkgs)),
-					detach,
-					character.only = TRUE,
-					unload = TRUE
-					)
-			)
-	)
-}
-# ==========================================================================
-# Load
-# ==========================================================================
-
-pkgs <- c(
-	"tidyverse",
-	"beepr",
-	"EBImage",
-	"RBioFormats",
-	"readr",
-	"stringr"
-	)
-
-for (pkg in pkgs) {
-	suppressWarnings(
-		suppressPackageStartupMessages(
-			library(pkg, character.only = TRUE)
-			)
-		)
-}
-
-options(repr.plot.width = 15, repr.plot.height = 20)
-
-
-
+source("scripts/r_clear_and_load.r")
 
 # ==========================================================================
 # Variables
@@ -116,11 +48,13 @@ if(!grid_output & change_grid_no) warning("grid_output is FALSE but change_grid_
 # Check folders exist
 # ==========================================================================
 
-if(!dir.exists("input-images")) dir.create("input-images")
-if(!dir.exists("grid-cellularities") & grid_output) dir.create("grid-cellularities")
-if(!dir.exists("normalised-images")) dir.create("normalised-images")
-if(!dir.exists("overlay-images")) dir.create("overlay-images")
-if(!dir.exists("segmented-images")) dir.create("segmented-images")
+if(!dir.exists("input")) dir.create("input")
+if(!dir.exists("output")) dir.create("output")
+if(!dir.exists("output/bf-analysis")) dir.create("output/bf-analysis")
+if(!dir.exists("output/bf-analysis/grid-cellularities") & grid_output) dir.create("output/bf-analysis/grid-cellularities")
+if(!dir.exists("output/bf-analysis/bf-normalised")) dir.create("output/bf-analysis/bf-normalised")
+if(!dir.exists("output/bf-analysis/bf-overlay")) dir.create("output/bf-analysis/bf-overlay")
+if(!dir.exists("output/bf-analysis/bf-segmented")) dir.create("output/bf-analysis/bf-segmented")
 
 # ==========================================================================
 # File formats
@@ -140,30 +74,17 @@ auto_lif_detect <- FALSE
 # put FALSE if you're dealing with image formats that aren't taken from leica image snapshots
 leica_snapshot_flg <- TRUE
 
-vector.OR <- function(vector) {
-	sum(vector) > 0 & length(vector) != 0
-}
-vector.XOR <- function(vector) {
-	sum(vector) == 1 & length(vector) != 0
-}
-vector.AND <- function(vector) {
-	sum(vector) == length(vector)
-}
-
-filetype.test <- function(file, extension) {
-	str_detect(file, paste0(".", extension, "$")) %>% vector.OR()
-}
 
 if(auto_lif_detect) {
 	# input format can be lif or tif
 	input_format <- "lif"
 } else {
-	image_file_contents <- list.files(path = "input-images", recursive = TRUE, full.names = TRUE)
+	image_file_contents <- list.files(path = "input", recursive = TRUE, full.names = TRUE)
 
 	compatible_types <- c("lif", "tif", "tiff", "png", "jpeg", "jpg")
 
 	if(length(image_file_contents) == 0) {
-		stop("File input-images is empty. Please add images or lifs")
+		stop("File input is empty. Please add images or lifs")
 	}
 	if(!sapply(X = compatible_types, FUN = filetype.test, file = image_file_contents) %>% vector.XOR()) {
 		stop("Multiple file formats detected. Please remove unwanted file format")
@@ -206,7 +127,7 @@ if(auto_lif_detect) {
 
 if(input_format == "lif") {
 
-lif_dirs <- list.files(path = "input-images", pattern = "lif$", recursive = TRUE, full.names = TRUE) 
+lif_dirs <- list.files(path = "input", pattern = "lif$", recursive = TRUE, full.names = TRUE) 
 
 check.dim <- function(lif){
 	twodim <- if(dim(lif)[3] == 2) TRUE else FALSE
@@ -214,7 +135,7 @@ check.dim <- function(lif){
 	return(twodim)
 }
 
-extract.image <- function(lif_name) {
+extract.bf <- function(lif_name) {
 	lif <- read.image(lif_name)
 	if(is.null(dim(lif))) {
 		twodims <- sapply(lif, FUN = check.dim)
@@ -228,7 +149,7 @@ extract.image <- function(lif_name) {
 image_names <- c()
 lif_lengths <- c()
 for(i in c(1:length(lif_dirs))) {
-	lif <- extract.image(lif_dirs[i])
+	lif <- extract.bf(lif_dirs[i])
 	if(is.null(dim(lif))) {
 		lif_length <- length(lif)
 	} else {
@@ -251,13 +172,13 @@ for(i in c(1:length(lif_dirs))) {
 		} else {
 			row_num <- sum(lif_lengths[1:(i-1)]) + j
 		}
-		image_names[row_num] <- c(paste0(sub('.+/(.+)', '\\1', lif_dirs[i] %>% str_replace(".lif", "")), " Image ", j))
+		image_names[row_num] <- c(paste0(sub('.+/(.+)', '\\1', lif_dirs[i] %>% str_replace(".lif", "")), " BF ", j))
 		assign(paste0("image_", image_names[row_num] %>% str_replace_all(" ", "_")), image)
 	}
 }
 } else {
 
-images <- list.files(path = "input-images", pattern = input_format, recursive = TRUE, full.names = TRUE) 
+images <- list.files(path = "input", pattern = input_format, recursive = TRUE, full.names = TRUE) 
 
 cellularities <- data.frame(matrix(nrow=length(images), ncol=2))
 colnames(cellularities) <- c("image_name", "cellularity")
@@ -280,40 +201,11 @@ if(testing){
 # Check output file isn't open
 # ==========================================================================
 
-check.writeable <- function(input_file) {
-	if(file.exists(input_file)){
-		try_empty <- suppressWarnings(try(read.csv(input_file)))
-		if(!(summary(try_empty)[2] == "try-error")) {
-			try_cellularities <- read.csv(input_file)
-			try_cellularities <- suppressWarnings(try(write.csv(try_cellularities, input_file, row.names = FALSE), silent = TRUE))
-			if(!is.null(try_cellularities)) {
-				stop(paste0(input_file, " is open, please close in order to write over it.\n
-					If you want to save the last run, please make another copy by another name"))
-				return(TRUE)
-			} else {return(FALSE)}
-		} else {return(FALSE)}
-	} else {return(FALSE)}
-}
 
-check.writeable.grid <- function(input_file) {
-	if(file.exists(input_file)){
-		try_empty <- suppressWarnings(try(read.csv(input_file, header = FALSE)))
-		if(!(summary(try_empty)[2] == "try-error")) {
-			try_cellularities <- read.csv(input_file, header = FALSE)
-			try_cellularities <- suppressWarnings(try(write.table(try_cellularities, input_file, row.names = FALSE, col.names = FALSE, sep = ","), silent = TRUE))
-			if(!is.null(try_cellularities)) {
-				stop(paste0(input_file, " is open, please close in order to write over it.\n
-					If you want to save the last run, please make another copy by another name"))
-				return(TRUE)
-			} else {return(FALSE)}
-		} else {return(FALSE)}
-	} else {return(FALSE)}
-}
-
-check.writeable("cellularities.csv")
+check.writeable("output/bf-analysis/cellularities.csv")
 
 if(testing) check.writeable("cellularities_test.csv")
-if(grid_output) invisible(sapply(paste0("grid-cellularities/", image_names, " ", grid_no, "x", grid_no, " grid.csv"), FUN = check.writeable.grid))
+if(grid_output) invisible(sapply(paste0("output/bf-analysis/grid-cellularities/", image_names, " ", grid_no, "x", grid_no, " grid.csv"), FUN = check.writeable.grid))
 
 # ==========================================================================
 # Calculate cellularities
@@ -340,17 +232,17 @@ for (j in 1:length(image_names)) {
 	}
 
 if(!(change_grid_no & grid_output)) {
-if(file.exists(paste0("normalised-images/", image_names[j], " normalised.", desired_output_format))) {
-	pre_normalised <- readImage(paste0("normalised-images/", image_names[j], " normalised.", desired_output_format))
-	if(!((dim(pre_normalised) == dim(m_bf)) %>% vector.AND())) source("01a_remove_gradient.r")
+if(file.exists(paste0("output/bf-analysis/bf-normalised/", image_names[j], " normalised.", desired_output_format))) {
+	pre_normalised <- readImage(paste0("output/bf-analysis/bf-normalised/", image_names[j], " normalised.", desired_output_format))
+	if(!((dim(pre_normalised) == dim(m_bf)) %>% vector.AND())) source("scripts/01a_remove_gradient.r")
 	rm("pre_normalised")
-} else {source("01a_remove_gradient.r")}
+} else {source("scripts/01a_remove_gradient.r")}
 
-source("01b_detect_edges.r")
-source("01c_cut_off.r")
+source("scripts/01b_detect_edges.r")
+source("scripts/01c_cut_off.r")
 }
 if(grid_output) {
-source("01d_by_grid.r")
+source("scripts/01d_by_grid.r")
 }
 if(!(change_grid_no & grid_output)) {
 auto_cellularities[j,] <- c(image_names[j], print(computer_cellularity), case_when((1-prop_background_edge)*100 > flag_thresh ~ "CHECK OUTLINE",
@@ -358,10 +250,10 @@ auto_cellularities[j,] <- c(image_names[j], print(computer_cellularity), case_wh
 }
 }
 
-write.csv(auto_cellularities, "cellularities.csv", row.names = FALSE)
+write.csv(auto_cellularities, "output/bf-analysis/cellularities.csv", row.names = FALSE)
 
 
-cellularities <- read.csv("cellularities.csv")
+cellularities <- read.csv("output/bf-analysis/cellularities.csv")
 
 if(testing) {
 cellularities_test <- inner_join(human_cellularities, cellularities, by = c(human_name = "name"))
