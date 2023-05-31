@@ -357,6 +357,8 @@ if (nrow(gfp_segmented) %% grid_no != 0) {
 	warning("Number of edge segments is not a factor of the edge length of image.\nResizing image accordingly...\n")
 	new_size <- nrow(gfp_segmented) - (nrow(gfp_segmented) %% grid_no)
 	gfp_segmented <- resize(gfp_segmented, w = new_size, h = new_size)
+	gfp <- resize(gfp, w = new_size, h = new_size)
+	bf_segmented <- resize(gfp, w = new_size, h = new_size)
 }
 
 gfp <- gfp[,,1]
@@ -366,6 +368,7 @@ grid_size <- nrow(gfp_segmented) / grid_no
 gfp_split <- matsplitter(gfp, grid_size, grid_size)
 gfp_seg_split <- matsplitter(gfp_segmented, grid_size, grid_size)
 bf_seg_split <- matsplitter(bf_segmented, grid_size, grid_size)
+
 
 d_stats_grid <- matrix(ncol = 5, nrow = grid_no^2)
 colnames(d_stats_grid) <- c("Grid x (L>R)", "Grid y (U>D)", "Percentage cells fluorescing", "Mean brightness", "SD in brightness")
