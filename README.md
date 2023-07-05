@@ -14,7 +14,7 @@ which I don't have permission to make public. This is also why there are no bran
 
 I will also be adding a code of conduct in the future
 
-### How the cellularity algorithm it works
+### How the cellularity algorithm works
 #### Normalisation
 Due to the nature of the microscope, the background brighness can often change throughout an image creating a brightness gradient. Therefore, the first step is to perform 3D linear regression on the image to find the gradient and account for it. This is done multiple times since it doesn't always remove all of the gradient the first time.
 Ways in which I would like to improve this step are firstly, by using non-linear regression here, and secondly, the gradient is currently accounted for by subtraction. I would like to change this to a multiplicative method.
@@ -33,3 +33,8 @@ Then cellularity is calculated by calculating the percentage cellular area out o
 
 #### By grid
 Cellularity can also be calculated on a localised level by separating the image into a grid. Then cellularity is calculated for each grid segment. Then each image gets its own cellularity .csv file with all the cellularities in. The cellularities are placed in the .csv file as they were in the image (e.g. the cellularity for the top right grid segment will be fount in the top right cell).
+
+### How the fluorescence algorithm works
+This is a much simpler algorithm. Firstly, the image is brightened so a human can see the fluorescence in an image. Then the image is blurred to cover any gaps in fluorescing cells, and reduce the effect of background noise. Then a cut-off is applied to remove all pixels below a certain level of brightness.
+Then, all segmented flurescing areas below a certain size threshold are removed to remove more noise. Finally, sometimes background noise will join together into a long, thin strand that is obviously noise, but it still takes up enough area to be kept. Therefore, shapes which are above a certain threshold of eccentricity (a shape that deviates from a circle) and which are still small enough are also removed. The size stipulation was added to prevent areas which constitute of lots of cells clumped together (which will likely be eccentric) from being removed.
+Then stats are calculated on both the whole image and by a grid. These include finding the mean and standard deviation. In the future, I would like to calculate more stats e.g. median also.
